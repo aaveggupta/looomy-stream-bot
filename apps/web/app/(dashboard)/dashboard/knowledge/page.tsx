@@ -1,9 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { prisma } from "@database/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileUpload } from "@/components/file-upload";
 import { DocumentList } from "@/components/document-list";
+import { ensureUserExists } from "@/lib/user";
 
 export default async function KnowledgePage() {
   const { userId } = await auth();
@@ -12,10 +12,8 @@ export default async function KnowledgePage() {
     redirect("/sign-in");
   }
 
-  const documents = await prisma.document.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
+  const user = await ensureUserExists(userId);
+  const documents = user.documents;
 
   return (
     <div className="space-y-8">

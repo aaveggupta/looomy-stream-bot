@@ -1,11 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { prisma } from "@database/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Youtube, Bot, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { BotToggle } from "@/components/bot-toggle";
+import { ensureUserExists } from "@/lib/user";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -14,17 +14,7 @@ export default async function DashboardPage() {
     redirect("/sign-in");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      documents: true,
-      botConfig: true,
-    },
-  });
-
-  if (!user) {
-    redirect("/sign-in");
-  }
+  const user = await ensureUserExists(userId);
 
   const hasYouTube = !!user.youtubeChannelId;
   const documentCount = user.documents.length;
