@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthUrl } from "@/lib/youtube";
 

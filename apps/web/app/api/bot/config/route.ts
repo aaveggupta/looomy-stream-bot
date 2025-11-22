@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@database/prisma";
 import { z } from "zod";
 
+export const dynamic = "force-dynamic";
+
 const configSchema = z.object({
   botName: z.string().min(1).max(50),
   triggerPhrase: z.string().min(1).max(50),
