@@ -28,7 +28,7 @@ export default async function DashboardPage() {
 
   const hasYouTube = !!user.youtubeChannelId;
   const documentCount = user.documents.length;
-  const embeddedCount = user.documents.filter((d) => d.isEmbedded).length;
+  const embeddedCount = user.documents.filter((d: { isEmbedded: boolean }) => d.isEmbedded).length;
   const botConfig = user.botConfig;
 
   return (
