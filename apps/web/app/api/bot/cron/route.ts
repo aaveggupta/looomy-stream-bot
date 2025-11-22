@@ -33,7 +33,13 @@ export async function GET(req: NextRequest) {
 
     console.log(`Found ${activeConfigs.length} active bot configs`);
 
-    const results = [];
+    const results: Array<{
+      userId: string;
+      processed?: number;
+      messagesReceived?: number;
+      triggerPhrase?: string;
+      error?: string;
+    }> = [];
 
     for (const config of activeConfigs) {
       if (!config.user.youtubeRefreshToken || !config.liveChatId) {
@@ -136,6 +142,8 @@ export async function GET(req: NextRequest) {
         results.push({
           userId: config.userId,
           processed: processedCount,
+          messagesReceived: messages.length,
+          triggerPhrase: config.triggerPhrase,
         });
       } catch (error) {
         console.error(`Error processing chat for user ${config.userId}:`, error);
@@ -152,7 +160,10 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ results });
+    return NextResponse.json({
+      activeConfigs: activeConfigs.length,
+      results
+    });
   } catch (error) {
     console.error("Cron error:", error);
     return NextResponse.json({ error: "Cron failed" }, { status: 500 });
