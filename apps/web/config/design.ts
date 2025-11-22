@@ -149,15 +149,15 @@ export const faqs = [
 ] as const;
 
 export const chatMessages = [
-  { user: "Alex_99", text: "What keyboard is he using?", color: "text-orange-400", isBot: false },
-  { user: "Looomy", text: "He's currently using the Keychron Q1 Pro with Gateron switches!", color: "text-brand-glow", isBot: true },
-  { user: "SarahPls", text: "Is this ranked?", color: "text-emerald-400", isBot: false },
-  { user: "Looomy", text: "Yes! Currently Diamond II, trying to push for Ascendant tonight.", color: "text-brand-glow", isBot: true },
-  { user: "PixelMage", text: "Can I join the lobby?", color: "text-blue-400", isBot: false },
-  { user: "Looomy", text: "Lobby is full right now, type !queue to join waiting list.", color: "text-brand-glow", isBot: true },
+  { user: "Alex_99", text: "@Looomy What keyboard is he using?", color: "text-orange-400", isBot: false },
+  { user: "Looomy", text: "@Alex_99 He's using the Keychron Q1 Pro with Gateron switches!", color: "text-brand-glow", isBot: true },
+  { user: "SarahPls", text: "@Looomy Is this ranked?", color: "text-emerald-400", isBot: false },
+  { user: "Looomy", text: "@SarahPls Yes! Diamond II, pushing for Ascendant tonight.", color: "text-brand-glow", isBot: true },
+  { user: "PixelMage", text: "@Looomy Can I join the lobby?", color: "text-blue-400", isBot: false },
+  { user: "Looomy", text: "@PixelMage Lobby is full, type !queue to join waiting list.", color: "text-brand-glow", isBot: true },
   { user: "Jinxed", text: "Pog", color: "text-pink-400", isBot: false },
-  { user: "RetroFan", text: "What song is this?", color: "text-yellow-400", isBot: false },
-  { user: "Looomy", text: "Now playing: 'Neon Blade' by MoonDeity.", color: "text-brand-glow", isBot: true },
+  { user: "RetroFan", text: "@Looomy What song is this?", color: "text-yellow-400", isBot: false },
+  { user: "Looomy", text: "@RetroFan Now playing: 'Neon Blade' by MoonDeity.", color: "text-brand-glow", isBot: true },
 ] as const;
 
 export const logos = ["StreamLabs", "OBS", "YouTube", "Discord", "Patreon", "Ko-fi"];
