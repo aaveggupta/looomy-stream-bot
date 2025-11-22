@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Bot } from "lucide-react";
+import { Logo } from "./logo";
 import { LandingButton } from "./ui";
 import { siteConfig } from "@/config/design";
 
@@ -12,10 +12,8 @@ export const Navbar: React.FC = () => {
   return (
     <nav className="fixed top-0 w-full z-50 border-b border-white/5 bg-canvas/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand rounded-xl flex items-center justify-center shadow-lg shadow-brand/20">
-            <Bot className="text-white w-6 h-6" />
-          </div>
+        <Link href="/" className="flex items-center gap-3" aria-label="Looomy Home">
+          <Logo size="md" />
           <span className="font-display font-bold text-xl tracking-tight text-white">
             {siteConfig.name}
           </span>

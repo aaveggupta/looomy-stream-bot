@@ -1,0 +1,24 @@
+{
+  "name": "Looomy - AI Co-Pilot for YouTube Live",
+  "short_name": "Looomy",
+  "description": "Deploy a smart AI bot that learns your content and answers viewer questions in real-time during YouTube live streams.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-icon",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities", "social"]
+}

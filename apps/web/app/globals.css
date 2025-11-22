@@ -13,7 +13,8 @@
     --card-foreground: 210 40% 98%;
     --popover: 222 47% 5%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
+    /* Primary blue: #2563eb - matches brand color */
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
     --secondary: 217 33% 12%;
     --secondary-foreground: 210 40% 98%;
@@ -25,7 +26,8 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217 33% 15%;
     --input: 217 33% 15%;
-    --ring: 217 91% 60%;
+    /* Ring: #2563eb - matches brand */
+    --ring: 221 83% 53%;
     --radius: 0.75rem;
   }
 
@@ -36,7 +38,8 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 217 91% 60%;
+    /* Primary blue: #2563eb - matches brand color */
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -48,7 +51,8 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 217 91% 60%;
+    /* Ring: #2563eb - matches brand */
+    --ring: 221 83% 53%;
   }
 }
 

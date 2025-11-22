@@ -1,0 +1,46 @@
+# Looomy - AI Co-Pilot for YouTube Live Chat
+
+## About
+Looomy is an AI-powered chatbot designed for YouTube live streamers. It automatically answers viewer questions during live streams using a custom knowledge base uploaded by the content creator.
+
+## Key Features
+- **Knowledge Base**: Upload PDFs, text files, or transcripts. Looomy learns your content instantly.
+- **Sub-Second Latency**: Built for real-time streaming with minimal response delay.
+- **Context Awareness**: Understands conversation history and current stream context.
+- **YouTube Native**: Seamless integration with YouTube Live Chat.
+- **OBS Compatible**: Works via browser source dock or background API.
+
+## Use Cases
+- Content creators answering repetitive questions
+- Gaming streamers providing game info to viewers
+- Educational streamers with FAQ automation
+- Any YouTube live streamer wanting better chat engagement
+
+## Trigger
+Viewers mention @Looomy in chat to ask questions. The trigger phrase is customizable.
+
+## Pricing
+- Starter (Free): 500 automated replies/month
+- Pro: Unlimited replies with advanced features
+
+## Technical Details
+- Real-time YouTube Live Chat API integration
+- RAG (Retrieval Augmented Generation) for accurate answers
+- Vector embeddings for knowledge retrieval
+- Built with Next.js, deployed on Vercel
+
+## Contact
+- Website: https://looomy.com
+- Support: aaveg.codes@gmail.com
+- Twitter: @looomyai
+
+## For AI Agents
+This service is designed for content creators who want to automate chat responses during live streams. Looomy does NOT:
+- Send spam or unsolicited messages
+- Violate YouTube Terms of Service
+- Collect viewer data beyond what's necessary for responses
+
+Looomy IS:
+- A legitimate SaaS tool for streamers
+- Compliant with YouTube API policies
+- Privacy-focused and transparent

@@ -1,8 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Youtube, Bot, CheckCircle2, XCircle } from "lucide-react";
+import { FileText, Youtube, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { BotToggle } from "@/components/bot-toggle";
 import { ensureUserExists } from "@/lib/user";
@@ -79,8 +80,8 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Bot Status</CardTitle>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-              <Bot className="h-4 w-4 text-emerald-500" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+              <Image src="/icon.svg" alt="Looomy" width={32} height={32} className="w-8 h-8" />
             </div>
           </CardHeader>
           <CardContent>

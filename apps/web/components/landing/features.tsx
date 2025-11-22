@@ -1,14 +1,15 @@
 "use client";
 
 import React from "react";
-import { Upload, Zap, Bot, Youtube } from "lucide-react";
+import Image from "next/image";
+import { Upload, Zap, Youtube } from "lucide-react";
 import { Section, SpotlightCard } from "./ui";
 import { features } from "@/config/design";
 
 const iconMap: Record<string, React.ReactNode> = {
   Upload: <Upload className="w-6 h-6 text-brand-glow" />,
   Zap: <Zap className="w-6 h-6 text-accent-landing-glow" />,
-  Bot: <Bot className="w-6 h-6 text-pink-500" />,
+  Bot: <Image src="/icon.svg" alt="Looomy" width={24} height={24} className="w-6 h-6" />,
   Youtube: <Youtube className="w-6 h-6 text-red-500" />,
 };
 

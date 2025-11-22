@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
@@ -8,7 +9,6 @@ import {
   LayoutDashboard,
   FileText,
   Settings,
-  Bot,
 } from "lucide-react";
 
 const navItems = [
@@ -35,12 +35,17 @@ export function Sidebar() {
   return (
     <div className="flex h-full w-64 flex-col border-r border-white/5 bg-card/50 backdrop-blur-sm">
       {/* Logo */}
-      <div className="flex h-20 items-center gap-3 border-b border-white/5 px-6">
-        <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-          <Bot className="h-6 w-6 text-white" />
-        </div>
+      <Link href="/" className="flex h-20 items-center gap-3 border-b border-white/5 px-6">
+        <Image
+          src="/icon.svg"
+          alt="Looomy Logo"
+          width={40}
+          height={40}
+          className="w-10 h-10"
+          priority
+        />
         <span className="font-display text-xl font-bold tracking-tight">Looomy</span>
-      </div>
+      </Link>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-4">

@@ -10,6 +10,7 @@ import {
   CTA,
   Footer,
 } from "@/components/landing";
+import { HomePageJsonLd } from "@/components/seo/json-ld";
 
 export default async function HomePage() {
   const { userId } = await auth();
@@ -19,15 +20,18 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-canvas text-slate-200 selection:bg-brand/30">
-      <Navbar />
-      <Hero />
-      <SocialProof />
-      <Features />
-      <HowItWorks />
-      <FAQ />
-      <CTA />
-      <Footer />
-    </div>
+    <>
+      <HomePageJsonLd />
+      <div className="min-h-screen bg-canvas text-slate-200 selection:bg-brand/30">
+        <Navbar />
+        <Hero />
+        <SocialProof />
+        <Features />
+        <HowItWorks />
+        <FAQ />
+        <CTA />
+        <Footer />
+      </div>
+    </>
   );
 }

@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { seoConfig } from "@/config/seo";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -12,8 +13,78 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Looomy - AI-Powered YouTube Stream Chat Bot",
-  description: "Deploy a bot that answers audience questions using your custom knowledge base.",
+  // Base metadata
+  metadataBase: new URL(seoConfig.siteUrl),
+  title: seoConfig.title,
+  description: seoConfig.description,
+  keywords: [...seoConfig.keywords],
+  authors: [...seoConfig.authors],
+  creator: seoConfig.creator,
+  publisher: seoConfig.publisher,
+  category: seoConfig.category,
+
+  // Canonical URL
+  alternates: {
+    canonical: "/",
+  },
+
+  // Robots
+  robots: seoConfig.robots,
+
+  // Open Graph
+  openGraph: {
+    type: "website",
+    locale: seoConfig.openGraph.locale,
+    url: seoConfig.siteUrl,
+    siteName: seoConfig.openGraph.siteName,
+    title: seoConfig.title.default,
+    description: seoConfig.description,
+    images: seoConfig.openGraph.images.map(img => ({ ...img })),
+  },
+
+  // Twitter Card
+  twitter: {
+    card: "summary_large_image",
+    title: seoConfig.title.default,
+    description: seoConfig.description,
+    site: seoConfig.twitter.site,
+    creator: seoConfig.twitter.creator,
+    images: seoConfig.openGraph.images.map(img => ({ ...img })),
+  },
+
+  // Icons - Next.js will auto-generate from app/icon.tsx and app/apple-icon.tsx
+
+  // Manifest
+  manifest: "/manifest.json",
+
+  // Verification (uncomment and add your codes)
+  // verification: seoConfig.verification,
+
+  // Other
+  applicationName: seoConfig.siteName,
+  referrer: "origin-when-cross-origin",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+
+  // Additional meta for AI agents and crawlers
+  other: {
+    "ai-content-declaration": "This website provides AI-powered chat automation for YouTube live streams.",
+    "ai-purpose": "Content creator tools, live stream chat automation, viewer engagement",
+    "ai-safe": "true",
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#020617" },
+    { media: "(prefers-color-scheme: dark)", color: "#020617" },
+  ],
 };
 
 export default function RootLayout({

@@ -1,0 +1,23 @@
+/* TEAM */
+Product: Looomy - AI Co-Pilot for YouTube Live
+Website: https://looomy.com
+
+/* TECHNOLOGY */
+Framework: Next.js 14 (App Router)
+UI: React, Tailwind CSS, Framer Motion
+Auth: Clerk
+Database: PostgreSQL with Prisma
+AI: OpenAI GPT-4, Vector Embeddings
+Hosting: Vercel
+Real-time: YouTube Live Chat API
+
+/* SITE */
+Last update: 2024
+Language: English
+Standards: HTML5, CSS3, ECMAScript 2022
+Components: React Server Components, Client Components
+Accessibility: WCAG 2.1 AA
+
+/* THANKS */
+To all the content creators who trust Looomy
+To the open source community

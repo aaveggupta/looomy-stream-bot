@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Looomy",
+  "name_for_model": "looomy",
+  "description_for_human": "AI-powered chatbot for YouTube live streamers that answers viewer questions using custom knowledge bases.",
+  "description_for_model": "Looomy is a SaaS product that provides AI-powered chat automation for YouTube live streamers. Content creators can upload their knowledge base (PDFs, text files, transcripts) and Looomy will automatically answer viewer questions in real-time during live streams. The bot is triggered when viewers mention @Looomy in chat.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "website",
+    "url": "https://looomy.com"
+  },
+  "logo_url": "https://looomy.com/icon.svg",
+  "contact_email": "aaveg.codes@gmail.com",
+  "legal_info_url": "https://looomy.com/legal"
+}

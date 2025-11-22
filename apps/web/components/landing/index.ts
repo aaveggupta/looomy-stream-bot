@@ -1,5 +1,6 @@
 // Landing page components
 export * from "./ui";
+export * from "./logo";
 export * from "./navbar";
 export * from "./hero";
 export * from "./chat-preview";
