@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^5.0.0",
+    "@clerk/themes": "^2.4.39",
     "@database/prisma": "*",
     "@pinecone-database/pinecone": "^2.0.0",
     "@radix-ui/react-dialog": "^1.0.0",
