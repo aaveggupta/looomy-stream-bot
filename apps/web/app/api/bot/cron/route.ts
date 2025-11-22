@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
   try {
     // Verify Vercel Cron or manual trigger with secret
     const authHeader = req.headers.get("authorization");
-    const isVercelCron = req.headers.get("x-vercel-cron") === "true";
+    const userAgent = req.headers.get("user-agent") || "";
+    const isVercelCron = userAgent.includes("vercel-cron");
     const isAuthorized = authHeader === `Bearer ${process.env.BOT_POLL_SECRET}`;
 
     if (!isVercelCron && !isAuthorized) {
