@@ -1,0 +1,19 @@
+{
+  "name": "@database/prisma",
+  "version": "1.0.0",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "db:generate": "dotenv -e ../../apps/web/.env -- prisma generate",
+    "db:push": "dotenv -e ../../apps/web/.env -- prisma db push",
+    "db:studio": "dotenv -e ../../apps/web/.env -- prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0"
+  },
+  "devDependencies": {
+    "dotenv-cli": "^7.0.0",
+    "prisma": "^5.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,273 @@
+# Looomy MVP Requirements
+
+## Project Overview
+
+**Name:** Looomy
+**Type:** AI-Powered YouTube Stream Chat Bot
+**Goal:** Allow streamers to deploy a bot that answers audience questions using their custom knowledge base.
+
+---
+
+## Core User Flow
+
+1. Sign up via Google (Clerk)
+2. Connect YouTube channel (OAuth)
+3. Upload knowledge documents (PDF/TXT)
+4. Toggle bot ON for live stream
+5. Bot auto-replies to questions in chat
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 14 (App Router) |
+| Monorepo | TurboRepo |
+| Styling | Tailwind CSS + Shadcn/UI |
+| Auth | Clerk |
+| Database | PostgreSQL + Prisma |
+| Vector DB | Pinecone |
+| AI | OpenAI (GPT-4o) + Vercel AI SDK |
+| YouTube | googleapis npm package |
+| File Parsing | pdf-parse |
+
+---
+
+## Project Structure
+
+```
+looomy/
+├── apps/
+│   └── web/                     # Next.js app
+│       ├── app/
+│       │   ├── (auth)/          # Login/signup pages
+│       │   ├── (dashboard)/     # Protected routes
+│       │   │   ├── page.tsx     # Dashboard home
+│       │   │   ├── knowledge/   # Document upload
+│       │   │   └── settings/    # Bot config + YouTube
+│       │   └── api/
+│       │       ├── webhooks/    # Clerk webhook
+│       │       ├── youtube/     # OAuth flow
+│       │       ├── documents/   # Upload & embed
+│       │       └── bot/         # Chat polling
+│       ├── components/
+│       └── lib/
+├── packages/
+│   └── database/                # Prisma schema & client
+├── turbo.json
+└── package.json
+```
+
+---
+
+## Database Schema
+
+```prisma
+model User {
+  id                  String     @id // Clerk User ID
+  email               String     @unique
+  youtubeRefreshToken String?
+  youtubeChannelId    String?
+  createdAt           DateTime   @default(now())
+
+  documents           Document[]
+  botConfig           BotConfig?
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  userId     String
+  filename   String
+  content    String   @db.Text
+  isEmbedded Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BotConfig {
+  id       String  @id @default(cuid())
+  userId   String  @unique
+  isActive Boolean @default(false)
+  botName  String  @default("LooomyBot")
+
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+```
+
+---
+
+## Environment Variables
+
+```bash
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+CLERK_WEBHOOK_SECRET=
+
+# Database
+DATABASE_URL=
+
+# Pinecone
+PINECONE_API_KEY=
+PINECONE_INDEX=
+
+# OpenAI
+OPENAI_API_KEY=
+
+# Google/YouTube
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://localhost:3000/api/youtube/callback
+```
+
+---
+
+## MVP Features
+
+### 1. Authentication
+- [ ] Clerk integration with Google OAuth
+- [ ] Webhook to sync users to Postgres
+- [ ] Protected dashboard routes
+
+### 2. YouTube Integration
+- [ ] "Connect YouTube" button
+- [ ] OAuth flow with googleapis
+- [ ] Store refresh token in User table
+- [ ] Display connected channel info
+
+### 3. Knowledge Base
+- [ ] File upload UI (drag & drop)
+- [ ] Support PDF and TXT files
+- [ ] Parse file content (pdf-parse)
+- [ ] Chunk text (1000 chars, 200 overlap)
+- [ ] Generate embeddings (OpenAI)
+- [ ] Store vectors in Pinecone (namespaced by userId)
+- [ ] Show upload status and document list
+
+### 4. Bot Engine
+- [ ] Bot ON/OFF toggle
+- [ ] Poll YouTube live chat (every 5-10s)
+- [ ] Detect trigger (@Looomy or configurable)
+- [ ] RAG pipeline:
+  - Query Pinecone for relevant chunks
+  - Send context + question to OpenAI
+  - Post reply to YouTube chat
+- [ ] Basic error handling
+
+### 5. Dashboard UI
+- [ ] Sidebar navigation
+- [ ] Dashboard home (status overview)
+- [ ] Knowledge base page
+- [ ] Settings page (bot config + YouTube)
+
+---
+
+## API Routes
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/webhooks/clerk` | POST | Sync Clerk users to DB |
+| `/api/youtube/connect` | GET | Redirect to Google OAuth |
+| `/api/youtube/callback` | GET | Handle OAuth callback |
+| `/api/youtube/disconnect` | POST | Remove YouTube connection |
+| `/api/documents` | GET | List user documents |
+| `/api/documents/upload` | POST | Upload and process file |
+| `/api/documents/[id]` | DELETE | Delete document |
+| `/api/bot/config` | GET/PUT | Get/update bot config |
+| `/api/bot/start` | POST | Start polling (or use toggle) |
+| `/api/bot/stop` | POST | Stop polling |
+
+---
+
+## NPM Dependencies
+
+### apps/web
+```json
+{
+  "dependencies": {
+    "next": "^14.0.0",
+    "@clerk/nextjs": "^5.0.0",
+    "@prisma/client": "^5.0.0",
+    "@pinecone-database/pinecone": "^2.0.0",
+    "ai": "^3.0.0",
+    "openai": "^4.0.0",
+    "googleapis": "^130.0.0",
+    "pdf-parse": "^1.1.1",
+    "tailwindcss": "^3.4.0",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
+    "lucide-react": "^0.300.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "prisma": "^5.0.0"
+  }
+}
+```
+
+---
+
+## Implementation Phases
+
+### Phase 1: Foundation (Day 1)
+1. Initialize TurboRepo monorepo
+2. Set up Next.js with App Router
+3. Configure Tailwind + Shadcn/UI
+4. Set up Clerk authentication
+5. Create Prisma schema and connect DB
+6. Build dashboard layout with sidebar
+
+### Phase 2: Knowledge Base (Day 2)
+1. Build file upload component
+2. Create upload API route
+3. Implement PDF/TXT parsing
+4. Set up Pinecone index
+5. Implement chunking + embedding pipeline
+6. Build document list UI
+
+### Phase 3: YouTube Integration (Day 3)
+1. Set up Google Cloud project
+2. Implement OAuth connect flow
+3. Handle callback and store tokens
+4. Display connection status
+5. Implement token refresh logic
+
+### Phase 4: Bot Engine (Day 4-5)
+1. Build bot config UI
+2. Implement YouTube chat polling
+3. Build RAG query function
+4. Implement chat reply posting
+5. Add ON/OFF toggle functionality
+6. Test end-to-end flow
+
+---
+
+## Out of Scope (Post-MVP)
+
+- Multi-channel support
+- Response analytics
+- Custom trigger words UI
+- Team collaboration
+- Usage quotas/billing
+- Advanced moderation
+- Webhook notifications
+- Mobile responsive design
+
+---
+
+## Success Criteria
+
+MVP is complete when:
+1. User can sign up and see dashboard
+2. User can connect their YouTube channel
+3. User can upload a PDF and see it processed
+4. User can toggle bot ON
+5. Bot responds to "@Looomy" questions in live chat with relevant answers from knowledge base

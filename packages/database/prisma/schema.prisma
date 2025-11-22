@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String     @id // Clerk User ID
+  email               String     @unique
+  youtubeRefreshToken String?
+  youtubeChannelId    String?
+  youtubeChannelName  String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  documents Document[]
+  botConfig BotConfig?
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  userId     String
+  filename   String
+  content    String   @db.Text
+  isEmbedded Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model BotConfig {
+  id            String  @id @default(cuid())
+  userId        String  @unique
+  isActive      Boolean @default(false)
+  botName       String  @default("LooomyBot")
+  triggerPhrase String  @default("@Looomy")
+  liveChatId    String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
