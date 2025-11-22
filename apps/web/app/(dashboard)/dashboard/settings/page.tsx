@@ -28,7 +28,7 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
+        <h1 className="text-3xl font-display font-bold">Settings</h1>
         <p className="text-muted-foreground">
           Configure your bot and YouTube connection.
         </p>
@@ -36,7 +36,7 @@ export default async function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>YouTube Connection</CardTitle>
+          <CardTitle className="font-display">YouTube Connection</CardTitle>
           <CardDescription>
             Connect your YouTube channel to enable the chat bot.
           </CardDescription>
@@ -51,7 +51,7 @@ export default async function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Bot Configuration</CardTitle>
+          <CardTitle className="font-display">Bot Configuration</CardTitle>
           <CardDescription>
             Customize how your bot responds in chat.
           </CardDescription>

@@ -18,7 +18,7 @@ export default async function KnowledgePage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Knowledge Base</h1>
+        <h1 className="text-3xl font-display font-bold">Knowledge Base</h1>
         <p className="text-muted-foreground">
           Upload documents for your bot to learn from.
         </p>
@@ -26,7 +26,7 @@ export default async function KnowledgePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Upload Documents</CardTitle>
+          <CardTitle className="font-display">Upload Documents</CardTitle>
           <CardDescription>
             Supported formats: PDF, TXT. Maximum size: 10MB.
           </CardDescription>
@@ -38,7 +38,7 @@ export default async function KnowledgePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Your Documents</CardTitle>
+          <CardTitle className="font-display">Your Documents</CardTitle>
           <CardDescription>
             {documents.length} document{documents.length !== 1 ? "s" : ""} uploaded
           </CardDescription>
