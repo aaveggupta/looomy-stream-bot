@@ -52,7 +52,14 @@ export const metadata: Metadata = {
     images: seoConfig.openGraph.images.map(img => ({ ...img })),
   },
 
-  // Icons - Next.js will auto-generate from app/icon.tsx and app/apple-icon.tsx
+  // Icons
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 
   // Manifest
   manifest: "/manifest.json",
