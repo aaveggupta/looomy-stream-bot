@@ -31,12 +31,17 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    console.log(`Found ${activeConfigs.length} active bot configs`);
+
     const results = [];
 
     for (const config of activeConfigs) {
       if (!config.user.youtubeRefreshToken || !config.liveChatId) {
+        console.log(`Skipping user ${config.userId} - missing credentials`);
         continue;
       }
+
+      console.log(`Processing bot for user ${config.userId}, trigger: "${config.triggerPhrase}"`);
 
       try {
         // Get live chat messages
@@ -44,6 +49,8 @@ export async function GET(req: NextRequest) {
           config.user.youtubeRefreshToken,
           config.liveChatId
         );
+
+        console.log(`Got ${messages.length} messages from YouTube`);
 
         const lastProcessed = lastProcessedMessages.get(config.userId);
         let foundLastProcessed = !lastProcessed;
@@ -66,11 +73,10 @@ export async function GET(req: NextRequest) {
           }
 
           // Check if message contains trigger phrase
-          if (
-            !messageText
-              .toLowerCase()
-              .includes(config.triggerPhrase.toLowerCase())
-          ) {
+          const hasTrigger = messageText.toLowerCase().includes(config.triggerPhrase.toLowerCase());
+          console.log(`Message: "${messageText.slice(0, 50)}..." - has trigger: ${hasTrigger}`);
+
+          if (!hasTrigger) {
             continue;
           }
 
