@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, ShieldCheck } from "lucide-react";
 import { LandingButton, FadeIn } from "./ui";
 import { ChatPreview } from "./chat-preview";
 import { siteConfig } from "@/config/design";
@@ -37,6 +37,13 @@ export const Hero: React.FC = () => {
               </LandingButton>
             </a>
           </div>
+          <a
+            href="#trust"
+            className="mt-6 inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 transition-colors"
+          >
+            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <span>Verified by Google · Your data is safe</span>
+          </a>
         </FadeIn>
 
         {/* Hero Graphic */}

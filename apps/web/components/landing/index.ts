@@ -8,5 +8,6 @@ export * from "./social-proof";
 export * from "./features";
 export * from "./how-it-works";
 export * from "./faq";
+export * from "./trust";
 export * from "./cta";
 export * from "./footer";

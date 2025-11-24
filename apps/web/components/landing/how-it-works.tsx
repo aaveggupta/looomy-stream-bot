@@ -55,7 +55,7 @@ export const HowItWorks: React.FC = () => {
                   Drop knowledge base files here
                 </p>
               </div>
-              <Link href="/sign-up">
+              <Link href="/sign-up" className="mt-4 block">
                 <LandingButton className="w-full">Activate Bot</LandingButton>
               </Link>
             </div>

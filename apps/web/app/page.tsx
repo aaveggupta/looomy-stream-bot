@@ -6,6 +6,7 @@ import {
   SocialProof,
   Features,
   HowItWorks,
+  Trust,
   FAQ,
   CTA,
   Footer,
@@ -28,6 +29,7 @@ export default async function HomePage() {
         <SocialProof />
         <Features />
         <HowItWorks />
+        <Trust />
         <FAQ />
         <CTA />
         <Footer />
