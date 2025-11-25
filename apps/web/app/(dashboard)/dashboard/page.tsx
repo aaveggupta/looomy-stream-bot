@@ -1,11 +1,18 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Image from "next/image";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Youtube, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { BotToggle } from "@/components/bot-toggle";
+import { BotSetupModal } from "@/components/bot-setup-modal";
 import { ensureUserExists } from "@/lib/user";
 
 export default async function DashboardPage() {
@@ -19,7 +26,9 @@ export default async function DashboardPage() {
 
   const hasYouTube = !!user.youtubeChannelId;
   const documentCount = user.documents.length;
-  const embeddedCount = user.documents.filter((d: { isEmbedded: boolean }) => d.isEmbedded).length;
+  const embeddedCount = user.documents.filter(
+    (d: { isEmbedded: boolean }) => d.isEmbedded
+  ).length;
   const botConfig = user.botConfig;
 
   return (
@@ -35,7 +44,9 @@ export default async function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">YouTube</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              YouTube
+            </CardTitle>
             <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
               <Youtube className="h-4 w-4 text-red-500" />
             </div>
@@ -64,7 +75,9 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Documents</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Documents
+            </CardTitle>
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <FileText className="h-4 w-4 text-primary" />
             </div>
@@ -79,9 +92,17 @@ export default async function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Bot Status</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Bot Status
+            </CardTitle>
             <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-              <Image src="/icon.svg" alt="Looomy" width={32} height={32} className="w-8 h-8" />
+              <Image
+                src="/icon.svg"
+                alt="Looomy"
+                width={32}
+                height={32}
+                className="w-8 h-8"
+              />
             </div>
           </CardHeader>
           <CardContent>
@@ -142,19 +163,34 @@ export default async function DashboardPage() {
               <div>
                 <h3 className="font-semibold">Bot Control</h3>
                 <p className="text-sm text-muted-foreground">
-                  Toggle the bot on/off for your live streams
+                  Toggle the bot on/off for your live streams. Make sure to add
+                  the bot as a moderator first.
                 </p>
               </div>
-              <BotToggle isActive={botConfig?.isActive ?? false} />
+              <div className="flex items-center gap-2">
+                <BotSetupModal
+                  botChannelName={
+                    process.env.NEXT_PUBLIC_BOT_CHANNEL_NAME || "Looomy"
+                  }
+                  botChannelUrl={
+                    process.env.NEXT_PUBLIC_BOT_CHANNEL_URL ||
+                    "https://www.youtube.com/@looomybot"
+                  }
+                />
+                <BotToggle isActive={botConfig?.isActive ?? false} />
+              </div>
             </div>
           )}
 
           {hasYouTube && documentCount > 0 && embeddedCount === 0 && (
             <div className="flex items-center justify-between rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
               <div>
-                <h3 className="font-semibold text-amber-500">Processing Documents</h3>
+                <h3 className="font-semibold text-amber-500">
+                  Processing Documents
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Your documents are being embedded. This may take a few minutes.
+                  Your documents are being embedded. This may take a few
+                  minutes.
                 </p>
               </div>
             </div>

@@ -34,17 +34,20 @@ AI-Powered YouTube Stream Chat Bot that answers audience questions using your cu
 ### Setup
 
 1. Clone the repository:
+
 ```bash
 git clone <repo-url>
 cd looomy
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Copy environment variables:
+
 ```bash
 cp apps/web/.env.example apps/web/.env
 ```
@@ -52,16 +55,19 @@ cp apps/web/.env.example apps/web/.env
 4. Fill in all environment variables in `apps/web/.env`
 
 5. Generate Prisma client:
+
 ```bash
 npm run db:generate
 ```
 
 6. Push database schema:
+
 ```bash
 npm run db:push
 ```
 
 7. Start development server:
+
 ```bash
 npm run dev
 ```
@@ -70,20 +76,23 @@ npm run dev
 
 ### Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_APP_URL` | Your app URL (http://localhost:3000 for dev) |
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key |
-| `CLERK_SECRET_KEY` | Clerk secret key |
-| `CLERK_WEBHOOK_SECRET` | Clerk webhook signing secret |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `PINECONE_API_KEY` | Pinecone API key |
-| `PINECONE_INDEX` | Pinecone index name |
-| `OPENAI_API_KEY` | OpenAI API key |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
-| `GOOGLE_REDIRECT_URI` | OAuth callback URL |
-| `BOT_POLL_SECRET` | Secret for bot polling endpoint |
+| Variable                            | Description                                  |
+| ----------------------------------- | -------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`               | Your app URL (http://localhost:3000 for dev) |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key                        |
+| `CLERK_SECRET_KEY`                  | Clerk secret key                             |
+| `CLERK_WEBHOOK_SECRET`              | Clerk webhook signing secret                 |
+| `DATABASE_URL`                      | PostgreSQL connection string                 |
+| `PINECONE_API_KEY`                  | Pinecone API key                             |
+| `PINECONE_INDEX`                    | Pinecone index name                          |
+| `OPENAI_API_KEY`                    | OpenAI API key                               |
+| `GOOGLE_CLIENT_ID`                  | Google OAuth client ID                       |
+| `GOOGLE_CLIENT_SECRET`              | Google OAuth client secret                   |
+| `GOOGLE_REDIRECT_URI`               | OAuth callback URL                           |
+| `BOT_YOUTUBE_REFRESH_TOKEN`         | Bot account's YouTube refresh token          |
+| `NEXT_PUBLIC_BOT_CHANNEL_NAME`      | Bot's YouTube channel name (displayed in UI) |
+| `NEXT_PUBLIC_BOT_CHANNEL_URL`       | Bot's YouTube channel URL                    |
+| `BOT_POLL_SECRET`                   | Secret for bot polling endpoint              |
 
 ### Clerk Webhook Setup
 
@@ -100,6 +109,33 @@ npm run dev
 4. Add authorized redirect URI: `http://localhost:3000/api/youtube/callback`
 5. Copy client ID and secret to environment variables
 
+### Bot Account Setup
+
+The bot requires a **separate YouTube channel** to reply in chat (like Nightbot). This allows the bot to have its own name and avatar instead of appearing as the streamer.
+
+1. **Create a Bot YouTube Channel**:
+   - Go to YouTube and create a new channel (e.g., "Looomy Bot")
+   - Customize the channel name and avatar as desired
+
+2. **Get Bot OAuth Token**:
+   - Temporarily modify your app to allow signing in with the bot account
+   - Go through the YouTube OAuth flow with the bot account
+   - Copy the refresh token from the database
+   - Add it to `BOT_YOUTUBE_REFRESH_TOKEN` in `.env`
+
+3. **Configure Bot Details**:
+   ```bash
+   BOT_YOUTUBE_REFRESH_TOKEN=<bot_refresh_token>
+   NEXT_PUBLIC_BOT_CHANNEL_NAME=Looomy Bot
+   NEXT_PUBLIC_BOT_CHANNEL_URL=https://www.youtube.com/@looomy-bot
+   ```
+
+4. **Add Bot as Moderator** (Users must do this):
+   - Each streamer must add your bot channel as a moderator
+   - Go to YouTube Studio > Settings > Community
+   - Under "Managing moderators", add the bot's channel URL
+   - The bot will now be able to send messages in their live chat
+
 ### Bot Polling
 
 The bot uses a polling endpoint (`/api/bot/poll`) that should be called periodically (every 5-10 seconds) when bots are active. You can set this up with:
@@ -109,9 +145,10 @@ The bot uses a polling endpoint (`/api/bot/poll`) that should be called periodic
 - Self-hosted scheduler
 
 Example cron request:
+
 ```bash
-curl -X POST https://your-domain.com/api/bot/poll \
-  -H "Authorization: Bearer YOUR_BOT_POLL_SECRET"
+curl -X POST http://localhost:3000/api/bot/poll \
+    -H "Authorization: Bearer BOT_POLL_SECRET"
 ```
 
 ## Project Structure

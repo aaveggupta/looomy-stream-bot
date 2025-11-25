@@ -21,29 +21,42 @@ export async function GET(req: NextRequest) {
     if (error) {
       console.error("YouTube OAuth error:", error);
       return NextResponse.redirect(
-        new URL("/dashboard/settings?error=oauth_denied", process.env.NEXT_PUBLIC_APP_URL)
+        new URL(
+          "/dashboard/settings?error=oauth_denied",
+          process.env.NEXT_PUBLIC_APP_URL
+        )
       );
     }
 
     if (!code) {
       return NextResponse.redirect(
-        new URL("/dashboard/settings?error=no_code", process.env.NEXT_PUBLIC_APP_URL)
+        new URL(
+          "/dashboard/settings?error=no_code",
+          process.env.NEXT_PUBLIC_APP_URL
+        )
       );
     }
 
     // Verify state matches userId
     if (state !== userId) {
       return NextResponse.redirect(
-        new URL("/dashboard/settings?error=invalid_state", process.env.NEXT_PUBLIC_APP_URL)
+        new URL(
+          "/dashboard/settings?error=invalid_state",
+          process.env.NEXT_PUBLIC_APP_URL
+        )
       );
     }
 
     // Exchange code for tokens
     const tokens = await getTokensFromCode(code);
+    console.log("REFRESH TOKEN:", tokens.refresh_token);
 
     if (!tokens.refresh_token) {
       return NextResponse.redirect(
-        new URL("/dashboard/settings?error=no_refresh_token", process.env.NEXT_PUBLIC_APP_URL)
+        new URL(
+          "/dashboard/settings?error=no_refresh_token",
+          process.env.NEXT_PUBLIC_APP_URL
+        )
       );
     }
 
@@ -61,12 +74,18 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.redirect(
-      new URL("/dashboard/settings?success=youtube_connected", process.env.NEXT_PUBLIC_APP_URL)
+      new URL(
+        "/dashboard/settings?success=youtube_connected",
+        process.env.NEXT_PUBLIC_APP_URL
+      )
     );
   } catch (error) {
     console.error("YouTube callback error:", error);
     return NextResponse.redirect(
-      new URL("/dashboard/settings?error=callback_failed", process.env.NEXT_PUBLIC_APP_URL)
+      new URL(
+        "/dashboard/settings?error=callback_failed",
+        process.env.NEXT_PUBLIC_APP_URL
+      )
     );
   }
 }

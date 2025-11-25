@@ -37,8 +37,8 @@ model BotConfig {
   id            String  @id @default(cuid())
   userId        String  @unique
   isActive      Boolean @default(false)
-  botName       String  @default("LooomyBot")
-  triggerPhrase String  @default("@Looomy")
+  botName       String  @default("Looomy")
+  triggerPhrase String  @default("@looomybot")
   liveChatId    String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

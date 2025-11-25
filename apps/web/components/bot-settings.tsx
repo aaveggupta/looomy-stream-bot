@@ -2,11 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { BotSetupInstructions } from "@/components/bot-setup-instructions";
 
 interface BotSettingsProps {
   botName: string;
@@ -16,40 +13,14 @@ interface BotSettingsProps {
 }
 
 export function BotSettings({
-  botName: initialBotName,
-  triggerPhrase: initialTriggerPhrase,
+  botName,
+  triggerPhrase,
   isActive: initialIsActive,
   hasYouTube,
 }: BotSettingsProps) {
-  const [botName, setBotName] = useState(initialBotName);
-  const [triggerPhrase, setTriggerPhrase] = useState(initialTriggerPhrase);
   const [isActive, setIsActive] = useState(initialIsActive);
-  const [saving, setSaving] = useState(false);
   const [toggling, setToggling] = useState(false);
   const router = useRouter();
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      const res = await fetch("/api/bot/config", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ botName, triggerPhrase }),
-      });
-
-      if (res.ok) {
-        router.refresh();
-      } else {
-        const data = await res.json();
-        alert(data.error || "Failed to save settings");
-      }
-    } catch (error) {
-      console.error("Save error:", error);
-      alert("Failed to save settings");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleToggle = async () => {
     if (!hasYouTube) {
@@ -80,42 +51,43 @@ export function BotSettings({
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="botName">Bot Name</Label>
-          <Input
-            id="botName"
-            value={botName}
-            onChange={(e) => setBotName(e.target.value)}
-            placeholder="LooomyBot"
-          />
-          <p className="text-sm text-muted-foreground">
-            This name will be used in bot responses.
+        <div className="rounded-lg bg-muted/50 border p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-muted-foreground">
+              Bot Name:
+            </span>
+            <span className="font-semibold">{botName}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-muted-foreground">
+              Trigger Phrase:
+            </span>
+            <code className="text-sm bg-black/30 px-2 py-1 rounded">
+              {triggerPhrase}
+            </code>
+          </div>
+          <p className="text-xs text-muted-foreground pt-2">
+            Users can trigger the bot by including{" "}
+            <code className="bg-black/30 px-1 py-0.5 rounded">
+              {triggerPhrase}
+            </code>{" "}
+            in their chat messages.
           </p>
         </div>
+      </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="triggerPhrase">Trigger Phrase</Label>
-          <Input
-            id="triggerPhrase"
-            value={triggerPhrase}
-            onChange={(e) => setTriggerPhrase(e.target.value)}
-            placeholder="@Looomy"
+      <div className="border-t pt-6">
+        <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-5">
+          <BotSetupInstructions
+            botChannelName={
+              process.env.NEXT_PUBLIC_BOT_CHANNEL_NAME || "Looomy"
+            }
+            botChannelUrl={
+              process.env.NEXT_PUBLIC_BOT_CHANNEL_URL ||
+              "https://www.youtube.com/@looomybot"
+            }
           />
-          <p className="text-sm text-muted-foreground">
-            The bot will respond when chat messages contain this phrase.
-          </p>
         </div>
-
-        <Button onClick={handleSave} disabled={saving}>
-          {saving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            "Save Settings"
-          )}
-        </Button>
       </div>
 
       <div className="border-t pt-6">

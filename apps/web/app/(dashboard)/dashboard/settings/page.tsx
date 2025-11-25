@@ -53,7 +53,7 @@ export default async function SettingsPage() {
         <CardHeader>
           <CardTitle className="font-display">Bot Configuration</CardTitle>
           <CardDescription>
-            Customize how your bot responds in chat.
+            View your bot settings and control when it&apos;s active.
           </CardDescription>
         </CardHeader>
         <CardContent>

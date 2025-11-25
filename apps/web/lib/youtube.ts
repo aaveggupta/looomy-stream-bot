@@ -38,6 +38,23 @@ export async function getYouTubeClient(refreshToken: string) {
   return google.youtube({ version: "v3", auth: oauth2Client });
 }
 
+export async function getBotYouTubeClient() {
+  const botRefreshToken = process.env.BOT_YOUTUBE_REFRESH_TOKEN;
+  if (!botRefreshToken) {
+    throw new Error("BOT_YOUTUBE_REFRESH_TOKEN not configured");
+  }
+  return getYouTubeClient(botRefreshToken);
+}
+
+export async function getBotChannelId() {
+  const botRefreshToken = process.env.BOT_YOUTUBE_REFRESH_TOKEN;
+  if (!botRefreshToken) {
+    throw new Error("BOT_YOUTUBE_REFRESH_TOKEN not configured");
+  }
+  const channelInfo = await getChannelInfo(botRefreshToken);
+  return channelInfo.id;
+}
+
 export async function getChannelInfo(refreshToken: string) {
   const youtube = await getYouTubeClient(refreshToken);
   const response = await youtube.channels.list({
@@ -101,6 +118,25 @@ export async function sendLiveChatMessage(
   message: string
 ) {
   const youtube = await getYouTubeClient(refreshToken);
+  await youtube.liveChatMessages.insert({
+    part: ["snippet"],
+    requestBody: {
+      snippet: {
+        liveChatId,
+        type: "textMessageEvent",
+        textMessageDetails: {
+          messageText: message,
+        },
+      },
+    },
+  });
+}
+
+export async function sendLiveChatMessageAsBot(
+  liveChatId: string,
+  message: string
+) {
+  const youtube = await getBotYouTubeClient();
   await youtube.liveChatMessages.insert({
     part: ["snippet"],
     requestBody: {
