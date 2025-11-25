@@ -7,11 +7,20 @@ import {
 } from "@/lib/youtube";
 import { generateEmbedding, generateChatResponse } from "@/lib/openai";
 import { queryVectors } from "@/lib/pinecone";
+import {
+  MessageTracker,
+  processLiveChatMessages,
+  type YouTubeLiveChatMessage,
+} from "@/lib/message-queue";
+import { logger, cronLogger } from "@/lib/logger";
 
-// Store last processed message ID per user to avoid duplicates
-const lastProcessedMessages = new Map<string, string>();
+// Message tracker to avoid re-processing messages across cron runs
+const messageTracker = new MessageTracker();
 
 export async function GET(req: NextRequest) {
+  const startTime = Date.now();
+  cronLogger.start();
+
   try {
     // Verify Vercel Cron or manual trigger with secret
     const authHeader = req.headers.get("authorization");
@@ -19,11 +28,15 @@ export async function GET(req: NextRequest) {
     const isVercelCron = userAgent.includes("vercel-cron");
     const isAuthorized = authHeader === `Bearer ${process.env.BOT_POLL_SECRET}`;
 
+    logger.info({ isVercelCron, isAuthorized }, "Authentication check");
+
     if (!isVercelCron && !isAuthorized) {
+      logger.warn("Unauthorized request");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get all active bot configs
+    logger.info("Fetching active bot configs from database");
     const activeConfigs = await prisma.botConfig.findMany({
       where: { isActive: true, liveChatId: { not: null } },
       include: {
@@ -31,7 +44,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    console.log(`Found ${activeConfigs.length} active bot configs`);
+    logger.info(`Found ${activeConfigs.length} active bot config(s)`);
 
     const results: Array<{
       userId: string;
@@ -42,115 +55,143 @@ export async function GET(req: NextRequest) {
     }> = [];
 
     for (const config of activeConfigs) {
+      cronLogger.userStart(config.userId, {
+        triggerPhrase: config.triggerPhrase,
+        botName: config.botName,
+        liveChatId: config.liveChatId || "unknown",
+      });
+
       if (!config.user.youtubeRefreshToken || !config.liveChatId) {
-        console.log(`Skipping user ${config.userId} - missing credentials`);
+        logger.warn({ userId: config.userId }, "Skipping user - missing credentials");
+        results.push({
+          userId: config.userId,
+          error: "Missing credentials (youtubeRefreshToken or liveChatId)",
+        });
         continue;
       }
 
-      console.log(`Processing bot for user ${config.userId}, trigger: "${config.triggerPhrase}"`);
-
       try {
-        // Get live chat messages
+        // Get live chat messages from YouTube
+        logger.info({ userId: config.userId }, "Fetching messages from YouTube");
         const { messages } = await getLiveChatMessages(
           config.user.youtubeRefreshToken,
           config.liveChatId
         );
 
-        console.log(`Got ${messages.length} messages from YouTube`);
+        logger.info({ userId: config.userId, count: messages.length }, `Fetched ${messages.length} message(s) from YouTube`);
 
-        const lastProcessed = lastProcessedMessages.get(config.userId);
-        let processedCount = 0;
-        let lastSeenMessageId: string | null = null;
-        let foundLastProcessed = !lastProcessed; // If no lastProcessed, process all messages
+        // Filter out messages without IDs and convert to YouTubeLiveChatMessage type
+        const validMessages = messages
+          .filter((msg) => msg.id != null)
+          .map((msg) => ({ ...msg, id: msg.id! })) as YouTubeLiveChatMessage[];
 
-        for (const message of messages) {
-          const messageId = message.id!;
-          const messageText =
-            message.snippet?.textMessageDetails?.messageText || "";
-          // Remove @ prefix if already present to avoid @@username
-          const rawAuthorName = message.authorDetails?.displayName || "User";
-          const authorName = rawAuthorName.startsWith("@") ? rawAuthorName.slice(1) : rawAuthorName;
+        if (validMessages.length < messages.length) {
+          logger.warn({ userId: config.userId, filteredCount: messages.length - validMessages.length }, `Filtered out ${messages.length - validMessages.length} message(s) without IDs`);
+        }
 
-          // Track the latest message ID we see
-          lastSeenMessageId = messageId;
+        // Process messages using our tested utility function
+        // This handles: deduplication, trigger phrase filtering, question extraction
+        const lastProcessed = messageTracker.getLastProcessed(config.userId);
+        logger.debug({ userId: config.userId, lastProcessed: lastProcessed || "none" }, `Last processed message ID: ${lastProcessed || "none (first run)"}`);
 
-          // Skip messages we've seen before - only process NEW messages after lastProcessed
-          if (!foundLastProcessed) {
-            if (messageId === lastProcessed) {
-              foundLastProcessed = true;
-            }
-            continue; // Skip this and all previous messages
-          }
+        const result = processLiveChatMessages(
+          validMessages,
+          lastProcessed,
+          config.triggerPhrase
+        );
 
-          // Check if message contains trigger phrase
-          const hasTrigger = messageText.toLowerCase().includes(config.triggerPhrase.toLowerCase());
-          console.log(`Message: "${messageText.slice(0, 50)}..." - has trigger: ${hasTrigger}`);
+        logger.info({
+          userId: config.userId,
+          total: result.totalMessages,
+          skipped: result.skippedMessages,
+          ignored: result.ignoredMessages,
+          toReply: result.messagesToReply.length,
+        }, "Message processing summary");
 
-          if (!hasTrigger) {
-            continue;
-          }
+        let repliedCount = 0;
 
-          // Extract the question (remove trigger phrase)
-          const question = messageText
-            .replace(new RegExp(config.triggerPhrase, "gi"), "")
-            .trim();
+        // Generate and send replies for each message
+        for (let i = 0; i < result.messagesToReply.length; i++) {
+          const message = result.messagesToReply[i];
+          const msgIndex = i + 1;
+          const msgTotal = result.messagesToReply.length;
 
-          if (!question) {
-            continue;
-          }
+          cronLogger.messageStart(config.userId, msgIndex, msgTotal, {
+            id: message.id,
+            author: message.authorName,
+            text: message.originalMessage,
+          });
 
-          // Generate embedding for the question
-          const questionEmbedding = await generateEmbedding(question);
-
-          // Query Pinecone for relevant context
-          const matches = await queryVectors(
-            config.userId,
-            questionEmbedding,
-            3
-          );
-
-          // Build context from matches
-          const context = matches
-            .map((match) => (match.metadata as { text: string })?.text || "")
-            .filter(Boolean)
-            .join("\n\n");
-
-          let replyText: string;
-
-          if (!context) {
-            replyText = `@${authorName} I don't have information about that topic.`;
-          } else {
-            const response = await generateChatResponse(
-              context,
-              question,
-              config.botName
-            );
-            replyText = `@${authorName} ${response}`;
-          }
-
-          // Truncate to YouTube's 200 char limit
-          if (replyText.length > 200) {
-            replyText = replyText.slice(0, 197) + "...";
-          }
+          logger.debug({ userId: config.userId, messageIndex: msgIndex, question: message.question }, "Extracted question");
 
           try {
+            // Generate embedding for the question
+            logger.debug({ userId: config.userId, messageIndex: msgIndex }, "Generating embedding");
+            const questionEmbedding = await generateEmbedding(message.question);
+
+            // Query Pinecone for relevant context
+            logger.debug({ userId: config.userId, messageIndex: msgIndex }, "Querying Pinecone for context (top 3)");
+            const matches = await queryVectors(
+              config.userId,
+              questionEmbedding,
+              3
+            );
+
+            logger.info({ userId: config.userId, messageIndex: msgIndex, matchCount: matches.length }, `Found ${matches.length} relevant context match(es)`);
+
+            // Build context from matches
+            const context = matches
+              .map((match) => (match.metadata as { text: string })?.text || "")
+              .filter(Boolean)
+              .join("\n\n");
+
+            let replyText: string;
+
+            if (!context) {
+              logger.warn({ userId: config.userId, messageIndex: msgIndex }, "No context found - sending default response");
+              replyText = `@${message.authorName} I don't have information about that topic.`;
+            } else {
+              logger.debug({ userId: config.userId, messageIndex: msgIndex, contextLength: context.length }, `Generating AI response with context (${context.length} chars)`);
+              const response = await generateChatResponse(
+                context,
+                message.question,
+                config.botName
+              );
+              replyText = `@${message.authorName} ${response}`;
+              logger.debug({ userId: config.userId, messageIndex: msgIndex, responseLength: response.length }, `Generated response (${response.length} chars)`);
+            }
+
+            // Truncate to YouTube's 200 char limit
+            const originalLength = replyText.length;
+            if (replyText.length > 200) {
+              replyText = replyText.slice(0, 197) + "...";
+              logger.debug({ userId: config.userId, messageIndex: msgIndex, originalLength, truncatedLength: replyText.length }, `Truncated reply: ${originalLength} → ${replyText.length} chars`);
+            }
+
             // Send response to live chat as bot
+            logger.debug({ userId: config.userId, messageIndex: msgIndex }, "Sending to YouTube Live Chat");
             await sendLiveChatMessageAsBot(
               config.liveChatId,
               replyText
             );
 
-            processedCount++;
-          } catch (sendError: any) {
+            cronLogger.messageSuccess(config.userId, msgIndex, msgTotal, replyText);
+            repliedCount++;
+          } catch (messageError: any) {
+            logger.error({
+              userId: config.userId,
+              messageIndex: msgIndex,
+              messageId: message.id,
+              error: messageError,
+            }, "Error processing message");
+
             // Check if error is due to bot not being a moderator
             if (
-              sendError?.response?.status === 403 ||
-              sendError?.message?.includes("unauthorized") ||
-              sendError?.message?.includes("forbidden")
+              messageError?.response?.status === 403 ||
+              messageError?.message?.includes("unauthorized") ||
+              messageError?.message?.includes("forbidden")
             ) {
-              console.error(
-                `Bot is not a moderator for user ${config.userId}. Deactivating bot.`
-              );
+              logger.error({ userId: config.userId, error: messageError }, "Bot is not a moderator - deactivating bot");
 
               // Deactivate bot - user needs to add bot as moderator
               await prisma.botConfig.update({
@@ -170,25 +211,32 @@ export async function GET(req: NextRequest) {
               break; // Stop processing messages for this user
             }
 
-            // Re-throw if it's a different error
-            throw sendError;
+            // Re-throw if it's a critical error
+            throw messageError;
           }
         }
 
-        // Update last processed message to the last one we saw (regardless of whether we replied)
-        if (lastSeenMessageId) {
-          lastProcessedMessages.set(config.userId, lastSeenMessageId);
+        // Update tracking with the last message we saw (prevents re-processing)
+        if (result.lastSeenMessageId) {
+          logger.debug({ userId: config.userId, lastSeenMessageId: result.lastSeenMessageId }, `Updating tracking: lastSeenMessageId = ${result.lastSeenMessageId}`);
+          messageTracker.setLastProcessed(config.userId, result.lastSeenMessageId);
         }
+
+        cronLogger.userEnd(config.userId, {
+          repliedCount,
+          totalMessages: result.messagesToReply.length,
+        });
 
         results.push({
           userId: config.userId,
-          processed: processedCount,
+          processed: repliedCount,
           messagesReceived: messages.length,
           triggerPhrase: config.triggerPhrase,
         });
       } catch (error) {
-        console.error(`Error processing chat for user ${config.userId}:`, error);
+        logger.error({ userId: config.userId, error }, "Fatal error processing chat");
 
+        logger.info({ userId: config.userId }, "Deactivating bot due to error");
         await prisma.botConfig.update({
           where: { id: config.id },
           data: { isActive: false, liveChatId: null },
@@ -201,12 +249,25 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const duration = Date.now() - startTime;
+    cronLogger.end(duration, {
+      total: activeConfigs.length,
+      success: results.filter((r) => !r.error).length,
+      errors: results.filter((r) => r.error).length,
+    });
+
     return NextResponse.json({
       activeConfigs: activeConfigs.length,
-      results
+      duration: `${duration}ms`,
+      timestamp: new Date().toISOString(),
+      results,
     });
   } catch (error) {
-    console.error("Cron error:", error);
-    return NextResponse.json({ error: "Cron failed" }, { status: 500 });
+    logger.error({ err: error instanceof Error ? error : new Error(String(error)) }, "CRON JOB FATAL ERROR");
+    return NextResponse.json({
+      error: "Cron failed",
+      message: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString(),
+    }, { status: 500 });
   }
 }
