@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@database/prisma";
 import {
   getLiveChatMessages,
-  sendLiveChatMessage,
+  sendLiveChatMessageAsBot,
 } from "@/lib/youtube";
 import { generateEmbedding, generateChatResponse } from "@/lib/openai";
 import { queryVectors } from "@/lib/pinecone";
@@ -129,14 +129,47 @@ export async function GET(req: NextRequest) {
             replyText = replyText.slice(0, 197) + "...";
           }
 
-          await sendLiveChatMessage(
-            config.user.youtubeRefreshToken,
-            config.liveChatId,
-            replyText
-          );
+          try {
+            // Send response to live chat as bot
+            await sendLiveChatMessageAsBot(
+              config.liveChatId,
+              replyText
+            );
 
-          processedCount++;
-          lastProcessedMessages.set(config.userId, messageId);
+            processedCount++;
+            lastProcessedMessages.set(config.userId, messageId);
+          } catch (sendError: any) {
+            // Check if error is due to bot not being a moderator
+            if (
+              sendError?.response?.status === 403 ||
+              sendError?.message?.includes("unauthorized") ||
+              sendError?.message?.includes("forbidden")
+            ) {
+              console.error(
+                `Bot is not a moderator for user ${config.userId}. Deactivating bot.`
+              );
+
+              // Deactivate bot - user needs to add bot as moderator
+              await prisma.botConfig.update({
+                where: { id: config.id },
+                data: {
+                  isActive: false,
+                  liveChatId: null,
+                },
+              });
+
+              results.push({
+                userId: config.userId,
+                error:
+                  "Bot is not added as a moderator. Please add the bot to your channel moderators and try again.",
+              });
+
+              break; // Stop processing messages for this user
+            }
+
+            // Re-throw if it's a different error
+            throw sendError;
+          }
         }
 
         results.push({
