@@ -46,7 +46,7 @@ export async function generateChatResponse(
 Rules:
 1. Answer questions based on the provided context.
 2. If the context doesn't contain relevant information, say you don't have information about that topic.
-3. STRICTLY keep responses under 200 characters. This is a hard limit.
+3. STRICTLY keep responses under 140 characters. This is a hard limit to ensure it fits in live chat.
 4. Provide concise, direct, and high-quality answers (no fluff).
 5. Be friendly and suitable for live chat.`,
       },
@@ -55,7 +55,7 @@ Rules:
         content: `Context:\n${context}\n\nQuestion: ${question}`,
       },
     ],
-    max_tokens: 70,
+    max_tokens: 50,
     temperature: 0.7,
   });
 
