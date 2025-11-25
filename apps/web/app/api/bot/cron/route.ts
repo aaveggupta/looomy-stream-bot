@@ -59,8 +59,9 @@ export async function GET(req: NextRequest) {
         console.log(`Got ${messages.length} messages from YouTube`);
 
         const lastProcessed = lastProcessedMessages.get(config.userId);
-        let foundLastProcessed = !lastProcessed;
         let processedCount = 0;
+        let lastSeenMessageId: string | null = null;
+        let foundLastProcessed = !lastProcessed; // If no lastProcessed, process all messages
 
         for (const message of messages) {
           const messageId = message.id!;
@@ -70,12 +71,15 @@ export async function GET(req: NextRequest) {
           const rawAuthorName = message.authorDetails?.displayName || "User";
           const authorName = rawAuthorName.startsWith("@") ? rawAuthorName.slice(1) : rawAuthorName;
 
-          // Skip until we find the last processed message
+          // Track the latest message ID we see
+          lastSeenMessageId = messageId;
+
+          // Skip messages we've seen before - only process NEW messages after lastProcessed
           if (!foundLastProcessed) {
             if (messageId === lastProcessed) {
               foundLastProcessed = true;
             }
-            continue;
+            continue; // Skip this and all previous messages
           }
 
           // Check if message contains trigger phrase
@@ -137,7 +141,6 @@ export async function GET(req: NextRequest) {
             );
 
             processedCount++;
-            lastProcessedMessages.set(config.userId, messageId);
           } catch (sendError: any) {
             // Check if error is due to bot not being a moderator
             if (
@@ -170,6 +173,11 @@ export async function GET(req: NextRequest) {
             // Re-throw if it's a different error
             throw sendError;
           }
+        }
+
+        // Update last processed message to the last one we saw (regardless of whether we replied)
+        if (lastSeenMessageId) {
+          lastProcessedMessages.set(config.userId, lastSeenMessageId);
         }
 
         results.push({
