@@ -1,5 +1,4 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -7,25 +6,18 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/privacy",
   "/terms",
+  "/api/webhooks(.*)",
   "/api/bot/poll",
   "/api/bot/cron",
-  "/api/webhooks(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  // Skip Clerk middleware entirely for webhook routes
-  if (request.nextUrl.pathname.startsWith("/api/webhooks")) {
-    return NextResponse.next();
-  }
-
   if (!isPublicRoute(request)) {
     const { userId } = await auth();
     if (!userId) {
       return auth().redirectToSignIn();
     }
   }
-
-  return NextResponse.next();
 });
 
 export const config = {
