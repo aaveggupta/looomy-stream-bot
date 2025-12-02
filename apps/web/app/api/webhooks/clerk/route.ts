@@ -8,7 +8,8 @@ export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    throw new Error("Please add CLERK_WEBHOOK_SECRET to .env");
+    console.error("CLERK_WEBHOOK_SECRET is not set in environment variables");
+    return new Response("Error: Webhook secret not configured", { status: 500 });
   }
 
   const headerPayload = await headers();
@@ -44,27 +45,37 @@ export async function POST(req: Request) {
     const email = email_addresses[0]?.email_address;
 
     if (!email) {
+      console.error(`Webhook ${eventType}: No email found for user ${id}`);
       return new Response("Error: No email found", { status: 400 });
     }
 
-    await prisma.user.upsert({
-      where: { id },
-      update: { email },
-      create: {
-        id,
-        email,
-      },
-    });
+    try {
+      await prisma.user.upsert({
+        where: { id },
+        update: { email },
+        create: {
+          id,
+          email,
+        },
+      });
+      console.log(`Webhook ${eventType}: Successfully processed user ${id} (${email})`);
+    } catch (error) {
+      console.error(`Webhook ${eventType}: Failed to upsert user ${id}:`, error);
+      return new Response("Error: Database operation failed", { status: 500 });
+    }
   }
 
   if (eventType === "user.deleted") {
     const { id } = evt.data;
     if (id) {
-      await prisma.user.delete({
-        where: { id },
-      }).catch(() => {
-        // User may not exist in DB yet
-      });
+      try {
+        await prisma.user.delete({
+          where: { id },
+        });
+        console.log(`Webhook user.deleted: Successfully deleted user ${id}`);
+      } catch (error) {
+        console.log(`Webhook user.deleted: User ${id} not found in database (might not have been created yet)`);
+      }
     }
   }
 
