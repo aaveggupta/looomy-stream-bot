@@ -23,6 +23,9 @@ export default clerkMiddleware(async (auth, request) => {
       return auth().redirectToSignIn();
     }
   }
+
+  // Explicitly return next response for all other routes
+  return NextResponse.next();
 });
 
 export const config = {
