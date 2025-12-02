@@ -12,7 +12,6 @@ AI-Powered YouTube Stream Chat Bot that answers audience questions using your cu
 ## Tech Stack
 
 - **Framework**: Next.js 14 (App Router)
-- **Monorepo**: TurboRepo
 - **Styling**: Tailwind CSS + Shadcn/UI
 - **Auth**: Clerk
 - **Database**: PostgreSQL + Prisma
@@ -49,10 +48,10 @@ npm install
 3. Copy environment variables:
 
 ```bash
-cp apps/web/.env.example apps/web/.env
+cp .env.example .env
 ```
 
-4. Fill in all environment variables in `apps/web/.env`
+4. Fill in all environment variables in `.env`
 
 5. Generate Prisma client:
 
@@ -114,16 +113,19 @@ npm run dev
 The bot requires a **separate YouTube channel** to reply in chat (like Nightbot). This allows the bot to have its own name and avatar instead of appearing as the streamer.
 
 1. **Create a Bot YouTube Channel**:
+
    - Go to YouTube and create a new channel (e.g., "Looomy Bot")
    - Customize the channel name and avatar as desired
 
 2. **Get Bot OAuth Token**:
+
    - Temporarily modify your app to allow signing in with the bot account
    - Go through the YouTube OAuth flow with the bot account
    - Copy the refresh token from the database
    - Add it to `BOT_YOUTUBE_REFRESH_TOKEN` in `.env`
 
 3. **Configure Bot Details**:
+
    ```bash
    BOT_YOUTUBE_REFRESH_TOKEN=<bot_refresh_token>
    NEXT_PUBLIC_BOT_CHANNEL_NAME=Looomy Bot
@@ -154,18 +156,15 @@ curl -X POST http://localhost:3000/api/bot/poll \
 ## Project Structure
 
 ```
-looomy/
-├── apps/
-│   └── web/                 # Next.js app
-│       ├── app/
-│       │   ├── (auth)/      # Login/signup pages
-│       │   ├── (dashboard)/ # Protected routes
-│       │   └── api/         # API routes
-│       ├── components/      # React components
-│       └── lib/             # Utilities
-├── packages/
-│   └── database/            # Prisma schema & client
-├── turbo.json
+looomy-stream-bot/
+├── app/                     # Next.js app directory
+│   ├── (auth)/             # Login/signup pages
+│   ├── (dashboard)/        # Protected routes
+│   └── api/                # API routes
+├── components/             # React components
+├── lib/                    # Utilities & database client
+├── prisma/                 # Prisma schema & migrations
+├── public/                 # Static assets
 └── package.json
 ```
 
