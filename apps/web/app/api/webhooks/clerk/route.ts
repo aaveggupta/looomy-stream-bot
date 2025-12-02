@@ -52,6 +52,22 @@ export async function POST(req: Request) {
     }
 
     try {
+      // First, check if another user with this email exists (different ID)
+      const existingUserWithEmail = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      // If email exists with a different user ID, delete the old record
+      if (existingUserWithEmail && existingUserWithEmail.id !== id) {
+        console.log(
+          `Webhook ${eventType}: Deleting old user record ${existingUserWithEmail.id} for email ${email}`
+        );
+        await prisma.user.delete({
+          where: { id: existingUserWithEmail.id },
+        });
+      }
+
+      // Now upsert the current user
       await prisma.user.upsert({
         where: { id },
         update: { email },
