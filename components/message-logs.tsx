@@ -63,7 +63,7 @@ export function MessageLogs({
     try {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "25",
+        limit: "10",
       });
 
       if (searchQuery) {

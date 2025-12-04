@@ -19,7 +19,7 @@ export default async function LogsPage() {
           userId,
         },
       },
-      take: 25,
+      take: 10,
       orderBy: {
         processedAt: "desc",
       },
@@ -50,9 +50,9 @@ export default async function LogsPage() {
 
   const pagination = {
     page: 1,
-    limit: 25,
+    limit: 10,
     totalCount,
-    totalPages: Math.ceil(totalCount / 25),
+    totalPages: Math.ceil(totalCount / 10),
   };
 
   return (
