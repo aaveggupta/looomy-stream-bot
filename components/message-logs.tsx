@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MessageSquare, Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -144,38 +144,20 @@ export function MessageLogs({
               </TableHeader>
               <TableBody>
                 {messages.map((message) => (
-                  <>
-                    <TableRow key={message.id}>
-                      <TableCell className="whitespace-nowrap">
-                        {formatTimestamp(new Date(message.processedAt))}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {message.authorName}
-                      </TableCell>
-                      <TableCell className="max-w-md">
-                        {message.messageText}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {message.streamSession.title}
-                      </TableCell>
-                    </TableRow>
-                    {message.botReply && (
-                      <TableRow key={`${message.id}-bot`}>
-                        <TableCell className="whitespace-nowrap">
-                          {formatTimestamp(new Date(message.processedAt))}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {process.env.NEXT_PUBLIC_BOT_CHANNEL_NAME || "Looomy Bot"}
-                        </TableCell>
-                        <TableCell className="max-w-md">
-                          {message.botReply}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {message.streamSession.title}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </>
+                  <TableRow key={message.id}>
+                    <TableCell className="whitespace-nowrap">
+                      {formatTimestamp(new Date(message.processedAt))}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {message.authorName}
+                    </TableCell>
+                    <TableCell className="max-w-md">
+                      {message.messageText}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {message.streamSession.title}
+                    </TableCell>
+                  </TableRow>
                 ))}
               </TableBody>
             </Table>
