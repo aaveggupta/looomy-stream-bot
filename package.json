@@ -29,6 +29,7 @@
     "@radix-ui/react-slot": "^1.0.0",
     "@radix-ui/react-switch": "^1.0.0",
     "@radix-ui/react-toast": "^1.0.0",
+    "@upstash/qstash": "^2.8.4",
     "ai": "^3.0.0",
     "autoprefixer": "^10.4.0",
     "class-variance-authority": "^0.7.0",

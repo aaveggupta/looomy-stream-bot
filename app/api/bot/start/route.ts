@@ -2,7 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getActiveLiveBroadcast } from "@/lib/youtube";
+import { discoverActiveStreams } from "@/lib/stream-discovery";
+import { logger } from "@/lib/logger";
 
 export async function POST() {
   try {
@@ -31,39 +32,29 @@ export async function POST() {
       );
     }
 
-    // Check for active live broadcast
-    const broadcast = await getActiveLiveBroadcast(user.youtubeRefreshToken);
-
-    if (!broadcast?.liveChatId) {
-      return NextResponse.json(
-        { error: "No active live stream found. Start a live stream first." },
-        { status: 400 }
-      );
-    }
-
-    // Update bot config
+    // Update bot config to active
     await prisma.botConfig.upsert({
       where: { userId },
       update: {
         isActive: true,
-        liveChatId: broadcast.liveChatId,
       },
       create: {
         userId,
         isActive: true,
-        liveChatId: broadcast.liveChatId,
       },
     });
 
+    // Trigger discovery to find active streams and create sessions
+    // This will automatically create StreamSession records and start polling
+    logger.info({ userId }, "Bot enabled - triggering stream discovery");
+    await discoverActiveStreams();
+
     return NextResponse.json({
       success: true,
-      broadcast: {
-        title: broadcast.title,
-        liveChatId: broadcast.liveChatId,
-      },
+      message: "Bot enabled. Active streams will be discovered automatically.",
     });
   } catch (error) {
-    console.error("Start bot error:", error);
+    logger.error({ error }, "Start bot error");
     return NextResponse.json(
       { error: "Failed to start bot" },
       { status: 500 }

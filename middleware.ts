@@ -7,8 +7,14 @@ const isPublicRoute = createRouteMatcher([
   "/privacy",
   "/terms",
   "/api/webhooks(.*)",
+  // Bot API endpoints use bearer token auth, not Clerk
   "/api/bot/poll",
   "/api/bot/cron",
+  "/api/bot/discover-streams",
+  "/api/bot/cleanup-streams",
+  "/api/bot/cleanup-messages",
+  "/api/bot/poll-stream(.*)",
+  "/api/bot/monitoring",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

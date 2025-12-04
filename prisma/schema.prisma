@@ -7,6 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Platform {
+  YOUTUBE
+  TWITCH
+  DISCORD
+}
+
+enum StreamStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+  ERROR
+}
+
 model User {
   id                  String     @id // Clerk User ID
   email               String     @unique
@@ -16,8 +29,9 @@ model User {
   createdAt           DateTime   @default(now())
   updatedAt           DateTime   @updatedAt
 
-  documents Document[]
-  botConfig BotConfig?
+  documents      Document[]
+  botConfig      BotConfig?
+  streamSessions StreamSession[]
 }
 
 model Document {
@@ -34,12 +48,72 @@ model Document {
 }
 
 model BotConfig {
-  id            String  @id @default(cuid())
-  userId        String  @unique
-  isActive      Boolean @default(false)
-  botName       String  @default("Looomy")
-  triggerPhrase String  @default("@looomybot")
-  liveChatId    String?
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  isActive           Boolean  @default(false)
+  botName            String   @default("Looomy")
+  triggerPhrase      String   @default("@looomybot")
+  liveChatId         String?  // Deprecated: kept for backward compatibility
+  maxConcurrentStreams Int    @default(3)
+  messageRetentionDays Int    @default(14)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StreamSession {
+  id                      String       @id @default(cuid())
+  userId                  String
+  platform                Platform     @default(YOUTUBE)
+  externalBroadcastId     String       // Platform-specific broadcast/stream ID
+  externalChatId          String       // Platform-specific chat ID
+  title                   String
+  status                  StreamStatus @default(ACTIVE)
+  startedAt               DateTime     @default(now())
+  endedAt                 DateTime?
+  pollingIntervalMillis   Int          @default(5000) // Current polling interval
+  lastPolledAt            DateTime?
+  lastPageToken           String?      // For pagination (YouTube)
+  lastProcessedMessageId  String?      // Last message ID we've seen
+  messageCount            Int          @default(0)
+  consecutiveEmptyPolls  Int          @default(0) // For adaptive polling
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  processedMessages ProcessedMessage[]
+
+  @@unique([platform, externalBroadcastId])
+  @@index([userId, status])
+  @@index([status, lastPolledAt])
+  @@index([platform, status])
+}
+
+model ProcessedMessage {
+  id             String        @id @default(cuid())
+  streamSessionId String
+  messageId      String        @unique // Platform-specific message ID
+  authorName     String
+  messageText    String        @db.Text
+  question       String?       @db.Text
+  botReply       String?       @db.Text
+  processedAt    DateTime      @default(now())
+  expiresAt      DateTime      // Set in application code based on BotConfig.messageRetentionDays
+
+  streamSession StreamSession @relation(fields: [streamSessionId], references: [id], onDelete: Cascade)
+
+  @@index([streamSessionId, processedAt])
+  @@index([messageId])
+  @@index([expiresAt])
+}
+
+model ApiQuota {
+  id              String   @id @default(cuid())
+  date            DateTime @unique @default(now())
+  requestCount    Int      @default(0)
+  estimatedCost   Float    @default(0)
+  backoffEnabled  Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([date])
 }

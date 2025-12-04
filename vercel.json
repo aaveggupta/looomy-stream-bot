@@ -1,8 +1,16 @@
 {
   "crons": [
     {
-      "path": "/api/bot/cron",
-      "schedule": "* * * * *"
+      "path": "/api/bot/discover-streams",
+      "schedule": "*/3 * * * *"
+    },
+    {
+      "path": "/api/bot/cleanup-streams",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/bot/cleanup-messages",
+      "schedule": "0 2 * * *"
     }
   ]
 }

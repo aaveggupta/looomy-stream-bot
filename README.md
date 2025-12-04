@@ -92,6 +92,8 @@ npm run dev
 | `NEXT_PUBLIC_BOT_CHANNEL_NAME`      | Bot's YouTube channel name (displayed in UI) |
 | `NEXT_PUBLIC_BOT_CHANNEL_URL`       | Bot's YouTube channel URL                    |
 | `BOT_POLL_SECRET`                   | Secret for bot polling endpoint              |
+| `QSTASH_TOKEN`                      | Upstash QStash token for job scheduling      |
+| `NEXT_PUBLIC_APP_URL`               | Your app URL (required for QStash callbacks) |
 
 ### Clerk Webhook Setup
 
@@ -138,19 +140,39 @@ The bot requires a **separate YouTube channel** to reply in chat (like Nightbot)
    - Under "Managing moderators", add the bot's channel URL
    - The bot will now be able to send messages in their live chat
 
-### Bot Polling
+### Bot Architecture
 
-The bot uses a polling endpoint (`/api/bot/poll`) that should be called periodically (every 5-10 seconds) when bots are active. You can set this up with:
+The bot uses a scalable, multi-platform architecture:
 
-- Vercel Cron Jobs
-- External cron service (cron-job.org, etc.)
-- Self-hosted scheduler
+- **Stream Discovery**: Automatically discovers active streams every 3 minutes
+- **Per-Stream Polling**: Each stream session is polled independently with adaptive intervals
+- **Message Deduplication**: Persistent ProcessedMessage table ensures no duplicate responses
+- **Adaptive Polling**: Polling intervals adjust based on chat activity (2-30 seconds)
+- **Quota Management**: Global API quota tracking with automatic backoff
+- **Cleanup Jobs**: Automatic cleanup of old messages and stale sessions
 
-Example cron request:
+### Cron Jobs
+
+The following cron jobs are configured in `vercel.json`:
+
+- **Stream Discovery** (`/api/bot/discover-streams`): Runs every 3 minutes
+- **Stream Cleanup** (`/api/bot/cleanup-streams`): Runs every 15 minutes
+- **Message Cleanup** (`/api/bot/cleanup-messages`): Runs daily at 2 AM
+
+### QStash Setup
+
+1. Create an account at [Upstash](https://upstash.com/)
+2. Create a QStash project
+3. Copy your QStash token to `QSTASH_TOKEN` in `.env`
+4. Ensure `NEXT_PUBLIC_APP_URL` is set correctly for callbacks
+
+### Monitoring
+
+Access system metrics at `/api/bot/monitoring` (requires `BOT_POLL_SECRET`):
 
 ```bash
-curl -X POST http://localhost:3000/api/bot/poll \
-    -H "Authorization: Bearer BOT_POLL_SECRET"
+curl -X GET http://localhost:3000/api/bot/discover-streams \
+    -H "Authorization: Bearer vIlBRSo23NL5xdPMaMR+2eaH+YUrpLLN+TkUtBS20bE="
 ```
 
 ## Project Structure
