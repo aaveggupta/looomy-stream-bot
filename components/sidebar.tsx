@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   FileText,
   Settings,
+  MessageSquare,
 } from "lucide-react";
 
 const navItems = [
@@ -21,6 +22,11 @@ const navItems = [
     title: "Knowledge Base",
     href: "/dashboard/knowledge",
     icon: FileText,
+  },
+  {
+    title: "Logs",
+    href: "/dashboard/logs",
+    icon: MessageSquare,
   },
   {
     title: "Settings",
