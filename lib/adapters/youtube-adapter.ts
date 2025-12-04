@@ -89,7 +89,7 @@ export class YouTubeAdapter implements PlatformAdapter {
 
     return {
       messages,
-      nextPageToken: result.nextPageToken,
+      nextPageToken: result.nextPageToken ?? undefined,
       pollingIntervalMillis: result.pollingIntervalMillis || 5000,
     };
   }
@@ -111,5 +111,3 @@ export class YouTubeAdapter implements PlatformAdapter {
 
 // Export singleton instance
 export const youtubeAdapter = new YouTubeAdapter();
-
-
