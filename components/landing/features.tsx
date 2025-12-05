@@ -18,11 +18,10 @@ export const Features: React.FC = () => {
     <Section id="features">
       <div className="text-center max-w-3xl mx-auto mb-16">
         <h2 className="text-3xl md:text-5xl font-display font-bold mb-6 text-white">
-          Supercharge your chat interaction
+          Built for creators who value their time
         </h2>
         <p className="text-slate-400 text-lg">
-          Looomy isn&apos;t just a chatbot. It&apos;s a dynamic knowledge engine that
-          evolves with your content.
+          Stop repeating yourself in chat. Your bot handles FAQs while you focus on creating amazing content.
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

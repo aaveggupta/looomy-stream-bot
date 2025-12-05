@@ -66,7 +66,7 @@ export const siteConfig = {
   name: "Looomy",
   tagline: "AI Co-Pilot for YouTube Live",
   description:
-    "Deploy a smart bot that learns your content and answers viewer questions in real-time. No more repeating yourself.",
+    "Deploy a smart bot with personality that learns your content and answers viewer questions in real-time. Choose from 8 unique personalities and run up to 3 streams simultaneously.",
   hero: {
     title: {
       line1: "Your Chat needs a",
@@ -81,30 +81,30 @@ export const siteConfig = {
 
 export const features = [
   {
-    title: "Knowledge Base",
+    title: "8 Unique Personalities",
     description:
-      "Upload your lore, rules, and FAQs. Looomy learns your content instantly to answer questions accurately.",
-    icon: "Upload",
+      "Choose from Friendly, Professional, Excited, Roasting, Chill, Motivational, Technical, or Humorous. Each personality has its own icon, color, and voice to perfectly match your brand.",
+    icon: "Bot",
     colSpan: 2,
   },
   {
-    title: "Sub-Second Latency",
+    title: "Multi-Stream Ready",
     description:
-      "Built on high-performance infrastructure for blink-of-an-eye response times during intense moments.",
+      "Run up to 3 concurrent streams simultaneously. Each stream is monitored independently with smart polling that adapts to chat activity.",
     icon: "Zap",
     colSpan: 1,
   },
   {
-    title: "Context Awareness",
+    title: "Smart Knowledge Base",
     description:
-      "Looomy understands the current game state and conversation history.",
-    icon: "Bot",
+      "Upload your PDFs and guides. Your bot learns instantly and answers questions accurately using your content as context.",
+    icon: "Upload",
     colSpan: 1,
   },
   {
-    title: "YouTube Native",
+    title: "Message Logs & Analytics",
     description:
-      "Seamlessly integrates with YouTube Live Chat. Connect once and let Looomy handle the rest.",
+      "Track every interaction with detailed logs. See what questions viewers are asking, how your bot responds, and measure engagement over time.",
     icon: "Youtube",
     colSpan: 2,
   },
@@ -113,38 +113,52 @@ export const features = [
 export const steps = [
   {
     title: "Connect Channel",
-    description: "One-click auth with YouTube.",
+    description: "One-click connection with YouTube. Secure and verified by Google.",
+  },
+  {
+    title: "Choose Personality",
+    description: "Pick from 8 unique personalities. Each has its own color, icon, and voice that matches your style.",
   },
   {
     title: "Upload Knowledge",
-    description: "Drop in your PDFs, text files, or previous transcripts.",
+    description: "Drop in your PDFs and text files. Your bot learns instantly and remembers everything.",
   },
   {
     title: "Go Live",
-    description: "Looomy automatically joins chat when you start streaming.",
+    description: "Bot automatically joins your streams and answers viewer questions in real-time.",
   },
 ] as const;
 
 export const faqs = [
   {
-    question: "Does it work with OBS?",
+    question: "Can I customize the bot's personality?",
     answer:
-      "Yes! Looomy integrates directly via a browser source dock, or can run in the background monitoring your chat via API.",
+      "Yes! Choose from 8 unique personalities: Friendly, Professional, Excited, Roasting, Chill, Motivational, Technical, or Humorous. Each has its own voice and style.",
+  },
+  {
+    question: "How many concurrent streams can I run?",
+    answer:
+      "You can run up to 3 concurrent streams simultaneously. Each stream is monitored independently with smart polling that adapts to your chat activity.",
   },
   {
     question: "How do I upload knowledge?",
     answer:
-      "Simply drag and drop PDF, TXT files into your dashboard. We process and embed them automatically.",
+      "Simply drag and drop PDF or TXT files into your dashboard. We automatically process them so your bot can learn and answer questions accurately.",
   },
   {
-    question: "Is there a free tier?",
+    question: "Can I see what questions viewers are asking?",
     answer:
-      "Absolutely. The Starter plan is free forever for up to 500 automated replies per month.",
+      "Absolutely! The Message Logs page shows every interaction with detailed analytics. See questions, bot replies, and track engagement over time.",
   },
   {
     question: "What trigger phrase does the bot use?",
     answer:
-      "You can customize the trigger phrase in settings. By default, it's @Looomy - viewers just mention it to ask questions.",
+      "Customizable in settings. Default is @looomybot - viewers just mention it to ask questions. The bot only responds when triggered, so it won't spam chat.",
+  },
+  {
+    question: "Is my data secure?",
+    answer:
+      "Yes! We use enterprise-grade security with verified Google authentication. Your credentials are encrypted and stored securely.",
   },
 ] as const;
 
