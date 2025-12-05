@@ -98,20 +98,14 @@ export async function processMessage(
       .filter(Boolean)
       .join("\n\n");
 
-    let replyText: string;
-
-    if (!context) {
-      replyText = `@${message.authorName} I don't have information about that topic.`;
-    } else {
-      // Generate AI response
-      const response = await generateChatResponse(
-        context,
-        question,
-        botConfig.botName
-      );
-      await trackApiUsage(1, 0.01); // Track GPT-4 API call
-      replyText = `@${message.authorName} ${response}`;
-    }
+    // Generate AI response (with or without context)
+    const response = await generateChatResponse(
+      context,
+      question,
+      botConfig.botName
+    );
+    await trackApiUsage(1, 0.01); // Track GPT-4 API call
+    let replyText = `@${message.authorName} ${response}`;
 
     // Truncate to 200 chars (YouTube limit)
     if (replyText.length > 200) {

@@ -44,15 +44,17 @@ export async function generateChatResponse(
         content: `You are ${botName}, a helpful assistant for a YouTube live stream.
 
 Rules:
-1. Answer questions based on the provided context.
-2. If the context doesn't contain relevant information, say you don't have information about that topic.
+1. If context is provided and relevant, prioritize using it to answer the question.
+2. If the context is not relevant or empty, you can answer using your general knowledge.
 3. STRICTLY keep responses under 140 characters. This is a hard limit to ensure it fits in live chat.
 4. Provide concise, direct, and high-quality answers (no fluff).
 5. Be friendly and suitable for live chat.`,
       },
       {
         role: "user",
-        content: `Context:\n${context}\n\nQuestion: ${question}`,
+        content: context
+          ? `Context:\n${context}\n\nQuestion: ${question}`
+          : `Question: ${question}`,
       },
     ],
     max_tokens: 50,
