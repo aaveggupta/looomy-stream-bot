@@ -60,6 +60,7 @@ export default async function SettingsPage() {
           <BotSettings
             botName={botConfig.botName}
             triggerPhrase={botConfig.triggerPhrase}
+            personality={botConfig.personality}
             isActive={botConfig.isActive}
             hasYouTube={!!user.youtubeChannelId}
           />

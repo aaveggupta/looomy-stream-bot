@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { BotPersonality } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,40 @@ export async function GET() {
     console.error("Get config error:", error);
     return NextResponse.json(
       { error: "Failed to fetch config" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { personality } = body;
+
+    // Validate personality
+    if (personality && !Object.values(BotPersonality).includes(personality)) {
+      return NextResponse.json(
+        { error: "Invalid personality" },
+        { status: 400 }
+      );
+    }
+
+    // Update config
+    const config = await prisma.botConfig.update({
+      where: { userId },
+      data: { personality },
+    });
+
+    return NextResponse.json({ config });
+  } catch (error) {
+    console.error("Update config error:", error);
+    return NextResponse.json(
+      { error: "Failed to update config" },
       { status: 500 }
     );
   }

@@ -20,6 +20,17 @@ enum StreamStatus {
   ERROR
 }
 
+enum BotPersonality {
+  FRIENDLY
+  PROFESSIONAL
+  EXCITED
+  ROASTING
+  CHILL
+  MOTIVATIONAL
+  TECHNICAL
+  HUMOROUS
+}
+
 model User {
   id                  String     @id // Clerk User ID
   email               String     @unique
@@ -48,14 +59,15 @@ model Document {
 }
 
 model BotConfig {
-  id                 String   @id @default(cuid())
-  userId             String   @unique
-  isActive           Boolean  @default(false)
-  botName            String   @default("Looomy")
-  triggerPhrase      String   @default("@looomybot")
-  liveChatId         String?  // Deprecated: kept for backward compatibility
-  maxConcurrentStreams Int    @default(3)
-  messageRetentionDays Int    @default(14)
+  id                 String          @id @default(cuid())
+  userId             String          @unique
+  isActive           Boolean         @default(false)
+  botName            String          @default("Looomy")
+  triggerPhrase      String          @default("@looomybot")
+  personality        BotPersonality  @default(FRIENDLY)
+  liveChatId         String?         // Deprecated: kept for backward compatibility
+  maxConcurrentStreams Int           @default(3)
+  messageRetentionDays Int           @default(14)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

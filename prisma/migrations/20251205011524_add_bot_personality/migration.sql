@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "BotPersonality" AS ENUM ('FRIENDLY', 'PROFESSIONAL', 'EXCITED', 'ROASTING', 'CHILL', 'MOTIVATIONAL', 'TECHNICAL', 'HUMOROUS');
+
+-- AlterTable
+ALTER TABLE "BotConfig" ADD COLUMN     "personality" "BotPersonality" NOT NULL DEFAULT 'FRIENDLY';

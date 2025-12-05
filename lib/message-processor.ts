@@ -102,7 +102,8 @@ export async function processMessage(
     const response = await generateChatResponse(
       context,
       question,
-      botConfig.botName
+      botConfig.botName,
+      botConfig.personality
     );
     await trackApiUsage(1, 0.01); // Track GPT-4 API call
     let replyText = `@${message.authorName} ${response}`;
