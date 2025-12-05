@@ -1,10 +1,9 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { Youtube, Upload, Check } from "lucide-react";
 import { Section, Badge, SpotlightCard, LandingButton } from "./ui";
-import { steps } from "@/config/design";
+import { steps, siteConfig } from "@/config/design";
 
 export const HowItWorks: React.FC = () => {
   return (
@@ -43,7 +42,7 @@ export const HowItWorks: React.FC = () => {
                   <div className="w-8 h-8 bg-red-500/20 rounded flex items-center justify-center">
                     <Youtube className="w-4 h-4 text-red-500" />
                   </div>
-                  <span className="font-medium text-white">Gaming Channel</span>
+                  <span className="font-medium text-white">Your Channel</span>
                 </div>
                 <div className="text-emerald-400 text-sm font-medium flex items-center gap-1">
                   <Check className="w-3 h-3" /> Connected
@@ -55,9 +54,9 @@ export const HowItWorks: React.FC = () => {
                   Drop knowledge base files here
                 </p>
               </div>
-              <Link href="/sign-up" className="mt-4 block">
-                <LandingButton className="w-full">Activate Bot</LandingButton>
-              </Link>
+              <a href={siteConfig.waitlistUrl} target="_blank" rel="noopener noreferrer" className="mt-4 block">
+                <LandingButton className="w-full">Join Waitlist</LandingButton>
+              </a>
             </div>
           </SpotlightCard>
         </div>

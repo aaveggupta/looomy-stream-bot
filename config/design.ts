@@ -73,10 +73,11 @@ export const siteConfig = {
       line2: "Brain, not a Script.",
     },
     cta: {
-      primary: "Deploy Looomy",
+      primary: "Join Waitlist",
       secondary: "Watch Demo",
     },
   },
+  waitlistUrl: "https://tally.so/r/obE9ae",
 } as const;
 
 export const features = [
@@ -163,15 +164,15 @@ export const faqs = [
 ] as const;
 
 export const chatMessages = [
-  { user: "Alex_99", text: "@Looomy What keyboard is he using?", color: "text-orange-400", isBot: false },
-  { user: "Looomy", text: "@Alex_99 He's using the Keychron Q1 Pro with Gateron switches!", color: "text-brand-glow", isBot: true },
-  { user: "SarahPls", text: "@Looomy Is this ranked?", color: "text-emerald-400", isBot: false },
-  { user: "Looomy", text: "@SarahPls Yes! Diamond II, pushing for Ascendant tonight.", color: "text-brand-glow", isBot: true },
-  { user: "PixelMage", text: "@Looomy Can I join the lobby?", color: "text-blue-400", isBot: false },
-  { user: "Looomy", text: "@PixelMage Lobby is full, type !queue to join waiting list.", color: "text-brand-glow", isBot: true },
-  { user: "Jinxed", text: "Pog", color: "text-pink-400", isBot: false },
-  { user: "RetroFan", text: "@Looomy What song is this?", color: "text-yellow-400", isBot: false },
-  { user: "Looomy", text: "@RetroFan Now playing: 'Neon Blade' by MoonDeity.", color: "text-brand-glow", isBot: true },
+  { user: "Alex_99", text: "@Looomy What camera are you using?", color: "text-orange-400", isBot: false },
+  { user: "Looomy", text: "@Alex_99 I'm using the Sony A7 III with a 50mm lens!", color: "text-brand-glow", isBot: true },
+  { user: "SarahPls", text: "@Looomy When's your next stream?", color: "text-emerald-400", isBot: false },
+  { user: "Looomy", text: "@SarahPls Next stream is Thursday at 7 PM EST!", color: "text-brand-glow", isBot: true },
+  { user: "PixelMage", text: "@Looomy Can I use your discount code?", color: "text-blue-400", isBot: false },
+  { user: "Looomy", text: "@PixelMage Yes! Use code STREAM20 for 20% off at checkout.", color: "text-brand-glow", isBot: true },
+  { user: "Jinxed", text: "Amazing content!", color: "text-pink-400", isBot: false },
+  { user: "RetroFan", text: "@Looomy What software do you recommend?", color: "text-yellow-400", isBot: false },
+  { user: "Looomy", text: "@RetroFan I use OBS Studio for streaming - it's free and powerful!", color: "text-brand-glow", isBot: true },
 ] as const;
 
 export const logos = ["StreamLabs", "OBS", "YouTube", "Discord", "Patreon", "Ko-fi"];

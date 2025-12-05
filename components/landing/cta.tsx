@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { LandingButton } from "./ui";
+import { siteConfig } from "@/config/design";
 
 export const CTA: React.FC = () => {
   return (
@@ -15,14 +15,14 @@ export const CTA: React.FC = () => {
             Ready to upgrade your stream?
           </h2>
           <p className="text-xl text-slate-300 mb-12 max-w-2xl mx-auto relative z-10">
-            Join thousands of creators using Looomy to build better communities.
+            Join the private beta and be among the first to experience AI-powered chat management.
           </p>
           <div className="flex justify-center relative z-10">
-            <Link href="/sign-up">
+            <a href={siteConfig.waitlistUrl} target="_blank" rel="noopener noreferrer">
               <LandingButton size="lg" className="min-w-[200px]">
-                Get Started for Free
+                Join Waitlist
               </LandingButton>
-            </Link>
+            </a>
           </div>
         </div>
       </div>

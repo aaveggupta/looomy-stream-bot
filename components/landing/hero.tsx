@@ -26,11 +26,11 @@ export const Hero: React.FC = () => {
             {siteConfig.description}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/sign-up">
+            <a href={siteConfig.waitlistUrl} target="_blank" rel="noopener noreferrer">
               <LandingButton size="lg">
                 {siteConfig.hero.cta.primary} <ArrowRight className="w-5 h-5" />
               </LandingButton>
-            </Link>
+            </a>
             <a href="#features">
               <LandingButton variant="outline" size="lg">
                 <Play className="w-5 h-5 mr-2" /> {siteConfig.hero.cta.secondary}

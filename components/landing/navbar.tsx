@@ -28,14 +28,9 @@ export const Navbar: React.FC = () => {
               {item}
             </a>
           ))}
-          <Link href="/sign-in">
-            <LandingButton variant="secondary" size="sm">
-              Sign In
-            </LandingButton>
-          </Link>
-          <Link href="/sign-up">
-            <LandingButton size="sm">Get Started</LandingButton>
-          </Link>
+          <a href={siteConfig.waitlistUrl} target="_blank" rel="noopener noreferrer">
+            <LandingButton size="sm">Join Waitlist</LandingButton>
+          </a>
         </div>
       </div>
     </nav>
