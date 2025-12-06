@@ -22,6 +22,23 @@ export async function processMessage(
   message: PlatformMessage,
   botConfig: BotConfig
 ): Promise<ProcessMessageResult> {
+  // Skip messages from the bot itself to prevent infinite loops
+  // The trigger phrase is like "@looomybot", so strip the @ and compare
+  const triggerName = botConfig.triggerPhrase.replace(/^@/, "").toLowerCase();
+  const authorNameLower = message.authorName.toLowerCase();
+
+  if (authorNameLower === triggerName) {
+    logger.debug(
+      {
+        sessionId: session.id,
+        messageId: message.id,
+        authorName: message.authorName,
+      },
+      "Skipping message from bot itself"
+    );
+    return { processed: false, replied: false };
+  }
+
   // Check if message was already processed
   const existing = await prisma.processedMessage.findUnique({
     where: { messageId: message.id },
@@ -86,11 +103,7 @@ export async function processMessage(
     await trackApiUsage(1, 0.0001); // Track embedding API call
 
     // Query Pinecone for context
-    const matches = await queryVectors(
-      session.userId,
-      questionEmbedding,
-      3
-    );
+    const matches = await queryVectors(session.userId, questionEmbedding, 3);
 
     // Build context
     const context = matches
@@ -173,4 +186,3 @@ export async function processMessage(
     };
   }
 }
-
