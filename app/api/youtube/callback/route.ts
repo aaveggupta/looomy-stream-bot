@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getTokensFromCode, getChannelInfo } from "@/lib/youtube";
 import { logger } from "@/lib/logger";
+import { encrypt } from "@/lib/encryption";
 
 export async function GET(req: NextRequest) {
   try {
@@ -64,11 +65,14 @@ export async function GET(req: NextRequest) {
     // Get channel info
     const channelInfo = await getChannelInfo(tokens.refresh_token);
 
+    // Encrypt the refresh token before storing
+    const encryptedRefreshToken = encrypt(tokens.refresh_token);
+
     // Update user with YouTube credentials
     await prisma.user.update({
       where: { id: userId },
       data: {
-        youtubeRefreshToken: tokens.refresh_token,
+        youtubeRefreshToken: encryptedRefreshToken,
         youtubeChannelId: channelInfo.id,
         youtubeChannelName: channelInfo.name,
       },

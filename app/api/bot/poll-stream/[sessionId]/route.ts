@@ -9,6 +9,7 @@ import { trackApiUsage, shouldEnableBackoff } from "@/lib/quota";
 import { logger } from "@/lib/logger";
 import { generateEmbeddings } from "@/lib/openai";
 import { PlatformMessage } from "@/lib/adapters/types";
+import { decryptIfEncrypted } from "@/lib/encryption";
 
 /**
  * Per-stream polling endpoint
@@ -83,6 +84,11 @@ export async function POST(
 
     const adapter = getAdapter(session.platform);
 
+    // Decrypt the refresh token if present
+    const decryptedRefreshToken = session.user.youtubeRefreshToken
+      ? decryptIfEncrypted(session.user.youtubeRefreshToken)
+      : undefined;
+
     // Poll messages
     const pollResult = await adapter.pollMessages(
       {
@@ -92,7 +98,7 @@ export async function POST(
       },
       {
         id: session.userId,
-        platformRefreshToken: session.user.youtubeRefreshToken || undefined,
+        platformRefreshToken: decryptedRefreshToken,
         platformChannelId: session.user.youtubeChannelId || undefined,
       }
     );

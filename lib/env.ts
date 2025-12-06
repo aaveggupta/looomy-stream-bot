@@ -12,6 +12,7 @@ const requiredEnvVars = [
   "GOOGLE_REDIRECT_URI",
   "BOT_YOUTUBE_REFRESH_TOKEN",
   "BOT_POLL_SECRET",
+  "ENCRYPTION_KEY",
 ] as const;
 
 const optionalEnvVars = ["LOG_LEVEL", "CLERK_WEBHOOK_SECRET"] as const;

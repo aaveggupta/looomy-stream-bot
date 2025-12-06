@@ -3,6 +3,7 @@ import { Platform, StreamStatus } from "@prisma/client";
 import { getAdapter } from "./adapters";
 import { schedulePollJob } from "./qstash";
 import { logger } from "./logger";
+import { decryptIfEncrypted } from "./encryption";
 
 /**
  * Discover active streams for all users with active bot configs
@@ -56,11 +57,14 @@ export async function discoverActiveStreams(): Promise<void> {
       continue;
     }
 
+    // Decrypt the refresh token
+    const decryptedRefreshToken = decryptIfEncrypted(user.youtubeRefreshToken);
+
     try {
       const adapter = getAdapter(platform);
       const activeStreams = await adapter.getActiveStreamsForUser({
         id: user.id,
-        platformRefreshToken: user.youtubeRefreshToken,
+        platformRefreshToken: decryptedRefreshToken,
         platformChannelId: user.youtubeChannelId || undefined,
       });
 
@@ -205,10 +209,15 @@ export async function cleanupStaleSessions(): Promise<void> {
     try {
       const adapter = getAdapter(session.platform);
 
+      // Decrypt the refresh token if present
+      const decryptedRefreshToken = session.user.youtubeRefreshToken
+        ? decryptIfEncrypted(session.user.youtubeRefreshToken)
+        : undefined;
+
       // Verify if stream is still live
       const activeStreams = await adapter.getActiveStreamsForUser({
         id: session.userId,
-        platformRefreshToken: session.user.youtubeRefreshToken || undefined,
+        platformRefreshToken: decryptedRefreshToken,
         platformChannelId: session.user.youtubeChannelId || undefined,
       });
 

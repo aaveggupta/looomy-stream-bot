@@ -6,6 +6,7 @@ import { Platform, StreamStatus, BotConfig } from "@prisma/client";
 import { getAdapter } from "@/lib/adapters";
 import { schedulePollJob } from "@/lib/qstash";
 import { logger } from "@/lib/logger";
+import { decryptIfEncrypted } from "@/lib/encryption";
 
 /**
  * Generate a welcome message for the bot to send when monitoring starts
@@ -89,9 +90,12 @@ export async function POST() {
     const platform = Platform.YOUTUBE;
     const adapter = getAdapter(platform);
 
+    // Decrypt the refresh token
+    const decryptedRefreshToken = decryptIfEncrypted(user.youtubeRefreshToken);
+
     const activeStreams = await adapter.getActiveStreamsForUser({
       id: userId,
-      platformRefreshToken: user.youtubeRefreshToken,
+      platformRefreshToken: decryptedRefreshToken,
       platformChannelId: user.youtubeChannelId || undefined,
     });
 

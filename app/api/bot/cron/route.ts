@@ -14,6 +14,7 @@ import {
 } from "@/lib/message-queue";
 import { logger, cronLogger } from "@/lib/logger";
 import { PINECONE_CONFIG, PLATFORM_CONFIG } from "@/lib/config";
+import { decryptIfEncrypted } from "@/lib/encryption";
 
 // Message tracker to avoid re-processing messages across cron runs
 const messageTracker = new MessageTracker();
@@ -71,11 +72,14 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
+      // Decrypt the refresh token
+      const decryptedRefreshToken = decryptIfEncrypted(config.user.youtubeRefreshToken);
+
       try {
         // Get live chat messages from YouTube
         logger.info({ userId: config.userId }, "Fetching messages from YouTube");
         const { messages } = await getLiveChatMessages(
-          config.user.youtubeRefreshToken,
+          decryptedRefreshToken,
           config.liveChatId
         );
 
