@@ -14,8 +14,9 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const limit = parseInt(searchParams.get("limit") || "20");
     const search = searchParams.get("search") || "";
+    const streamId = searchParams.get("streamId");
 
     const skip = (page - 1) * limit;
 
@@ -25,6 +26,11 @@ export async function GET(request: NextRequest) {
         userId,
       },
     };
+
+    // Filter by stream if provided
+    if (streamId) {
+      where.streamSessionId = streamId;
+    }
 
     // Add search filter if provided
     if (search) {
@@ -52,12 +58,6 @@ export async function GET(request: NextRequest) {
           question: true,
           botReply: true,
           processedAt: true,
-          streamSession: {
-            select: {
-              title: true,
-              platform: true,
-            },
-          },
         },
       }),
       prisma.processedMessage.count({ where }),

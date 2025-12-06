@@ -1,6 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { MessageLogs } from "@/components/message-logs";
 import { prisma } from "@/lib/db";
 
@@ -11,71 +17,57 @@ export default async function LogsPage() {
     redirect("/sign-in");
   }
 
-  // Fetch initial messages
-  const [messages, totalCount] = await Promise.all([
-    prisma.processedMessage.findMany({
-      where: {
-        streamSession: {
-          userId,
-        },
-      },
-      take: 10,
-      orderBy: {
-        processedAt: "desc",
-      },
-      select: {
-        id: true,
-        messageId: true,
-        authorName: true,
-        messageText: true,
-        question: true,
-        botReply: true,
-        processedAt: true,
-        streamSession: {
-          select: {
-            title: true,
-            platform: true,
-          },
-        },
-      },
-    }),
-    prisma.processedMessage.count({
-      where: {
-        streamSession: {
-          userId,
-        },
-      },
-    }),
-  ]);
+  // Fetch bot config for bot name
+  const botConfig = await prisma.botConfig.findUnique({
+    where: { userId },
+    select: { botName: true },
+  });
 
-  const pagination = {
-    page: 1,
-    limit: 10,
-    totalCount,
-    totalPages: Math.ceil(totalCount / 10),
-  };
+  const botName = botConfig?.botName || "Looomy";
+
+  // Fetch streams with message counts
+  const streams = await prisma.streamSession.findMany({
+    where: {
+      userId,
+    },
+    orderBy: {
+      startedAt: "desc",
+    },
+    select: {
+      id: true,
+      title: true,
+      platform: true,
+      status: true,
+      startedAt: true,
+      endedAt: true,
+      messageCount: true,
+      _count: {
+        select: {
+          processedMessages: true,
+        },
+      },
+    },
+    take: 50, // Last 50 streams
+  });
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-display font-bold">Logs</h1>
         <p className="text-muted-foreground">
-          Search through logs from the last 7 days.
+          View conversation history from your streams (last 3 days)
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="font-display">Messages</CardTitle>
+          <CardTitle className="font-display">Stream Logs</CardTitle>
           <CardDescription>
-            All messages processed by your bot during live streams
+            Select a stream to view its message history
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <MessageLogs
-            initialMessages={messages}
-            initialPagination={pagination}
-          />
+          <MessageLogs streams={streams} botName={botName} />
         </CardContent>
       </Card>
     </div>
