@@ -14,7 +14,6 @@ import {
   Radio,
   Loader2,
   StopCircle,
-  RefreshCw,
   Clock,
   MessageSquare,
   AlertCircle,
@@ -186,33 +185,23 @@ export function StreamMonitor() {
               Monitoring {limits.current} of {limits.max} concurrent streams
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchActiveStreams}
-              disabled={loading}
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            </Button>
-            <Button
-              onClick={handleStartMonitoring}
-              disabled={startingMonitor || !canStartMore}
-              className="shadow-lg shadow-primary/25"
-            >
-              {startingMonitor ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Finding Streams...
-                </>
-              ) : (
-                <>
-                  <Play className="mr-2 h-4 w-4" />
-                  Start Streaming
-                </>
-              )}
-            </Button>
-          </div>
+          <Button
+            onClick={handleStartMonitoring}
+            disabled={startingMonitor || !canStartMore}
+            className="shadow-lg shadow-primary/25"
+          >
+            {startingMonitor ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Finding Streams...
+              </>
+            ) : (
+              <>
+                <Play className="mr-2 h-4 w-4" />
+                Start Monitoring
+              </>
+            )}
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -248,9 +237,6 @@ export function StreamMonitor() {
                       <MessageSquare className="h-3 w-3" />
                       {session.messageCount} messages
                     </span>
-                    <span className="text-xs">
-                      Last poll: {formatTime(session.lastPolledAt)}
-                    </span>
                   </div>
                 </div>
                 <Button
@@ -277,7 +263,8 @@ export function StreamMonitor() {
             <Radio className="mx-auto h-12 w-12 text-muted-foreground/50" />
             <p className="mt-4 font-medium">No active streams</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Click &quot;Start Streaming&quot; when you go live to begin monitoring
+              Click &quot;Start Monitoring&quot; when you go live to begin
+              monitoring
             </p>
           </div>
         )}
@@ -301,7 +288,8 @@ export function StreamMonitor() {
                   <div className="flex items-center gap-4 text-muted-foreground">
                     <span>{session.messageCount} messages</span>
                     <span>
-                      Ended {session.endedAt ? formatTime(session.endedAt) : "—"}
+                      Ended{" "}
+                      {session.endedAt ? formatTime(session.endedAt) : "—"}
                     </span>
                   </div>
                 </div>
@@ -313,14 +301,16 @@ export function StreamMonitor() {
         {/* Usage hint */}
         {!canStartMore && activeSessions.length > 0 && (
           <p className="text-sm text-amber-400">
-            You&apos;ve reached the maximum of {limits.max} concurrent stream{limits.max === 1 ? "" : "s"}.
-            Stop monitoring a stream to start a new one.
+            You&apos;ve reached the maximum of {limits.max} concurrent stream
+            {limits.max === 1 ? "" : "s"}. Stop monitoring a stream to start a
+            new one.
           </p>
         )}
 
         {/* Upgrade hint */}
         <p className="text-xs text-muted-foreground pt-2 border-t border-white/5">
-          Currently monitoring up to {limits.max} stream{limits.max === 1 ? "" : "s"} concurrently.{" "}
+          Currently monitoring up to {limits.max} stream
+          {limits.max === 1 ? "" : "s"} concurrently.{" "}
           <a
             href={`mailto:${contactEmail}?subject=Increase%20Concurrent%20Streams%20Limit`}
             className="text-primary hover:underline"
