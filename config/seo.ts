@@ -1,6 +1,8 @@
 // SEO Configuration for Looomy
 // Centralized SEO metadata and configuration
 
+export const contactEmail = "aaveg.codes@gmail.com";
+
 export const seoConfig = {
   siteName: "Looomy",
   siteUrl: "https://looomy.com",

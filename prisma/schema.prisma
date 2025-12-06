@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum Platform {
@@ -61,12 +60,12 @@ model Document {
 model BotConfig {
   id                 String          @id @default(cuid())
   userId             String          @unique
-  isActive           Boolean         @default(false)
+  isActive           Boolean         @default(true)
   botName            String          @default("Looomy")
   triggerPhrase      String          @default("@looomybot")
   personality        BotPersonality  @default(FRIENDLY)
   liveChatId         String?         // Deprecated: kept for backward compatibility
-  maxConcurrentStreams Int           @default(3)
+  maxConcurrentStreams Int           @default(1)
   messageRetentionDays Int           @default(14)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

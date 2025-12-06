@@ -53,7 +53,7 @@ export default async function SettingsPage() {
         <CardHeader>
           <CardTitle className="font-display">Bot Configuration</CardTitle>
           <CardDescription>
-            View your bot settings and control when it&apos;s active.
+            Customize your bot&apos;s personality and behavior.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -61,8 +61,6 @@ export default async function SettingsPage() {
             botName={botConfig.botName}
             triggerPhrase={botConfig.triggerPhrase}
             personality={botConfig.personality}
-            isActive={botConfig.isActive}
-            hasYouTube={!!user.youtubeChannelId}
           />
         </CardContent>
       </Card>

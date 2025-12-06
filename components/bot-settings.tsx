@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Switch } from "@/components/ui/switch";
 import { BotSetupInstructions } from "@/components/bot-setup-instructions";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -33,8 +32,6 @@ interface BotSettingsProps {
   botName: string;
   triggerPhrase: string;
   personality: BotPersonality;
-  isActive: boolean;
-  hasYouTube: boolean;
 }
 
 const personalityConfig: Record<
@@ -95,40 +92,10 @@ export function BotSettings({
   botName,
   triggerPhrase,
   personality: initialPersonality,
-  isActive: initialIsActive,
-  hasYouTube,
 }: BotSettingsProps) {
-  const [isActive, setIsActive] = useState(initialIsActive);
   const [personality, setPersonality] = useState(initialPersonality);
-  const [toggling, setToggling] = useState(false);
   const [updating, setUpdating] = useState(false);
   const router = useRouter();
-
-  const handleToggle = async () => {
-    if (!hasYouTube) {
-      alert("Please connect your YouTube channel first");
-      return;
-    }
-
-    setToggling(true);
-    try {
-      const endpoint = isActive ? "/api/bot/stop" : "/api/bot/start";
-      const res = await fetch(endpoint, { method: "POST" });
-
-      if (res.ok) {
-        setIsActive(!isActive);
-        router.refresh();
-      } else {
-        const data = await res.json();
-        alert(data.error || "Failed to toggle bot");
-      }
-    } catch (error) {
-      console.error("Toggle error:", error);
-      alert("Failed to toggle bot");
-    } finally {
-      setToggling(false);
-    }
-  };
 
   const handlePersonalityChange = async (newPersonality: BotPersonality) => {
     setUpdating(true);
@@ -297,33 +264,6 @@ export function BotSettings({
         </div>
       </div>
 
-      <div className="border-t pt-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium">Bot Status</h3>
-            <p className="text-sm text-muted-foreground">
-              {isActive
-                ? "Bot is active and monitoring live chat"
-                : "Bot is currently inactive"}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch
-              checked={isActive}
-              onCheckedChange={handleToggle}
-              disabled={toggling || !hasYouTube}
-            />
-            <span className="text-sm font-medium">
-              {toggling ? "..." : isActive ? "ON" : "OFF"}
-            </span>
-          </div>
-        </div>
-        {!hasYouTube && (
-          <p className="mt-2 text-sm text-yellow-600">
-            Connect your YouTube channel to enable the bot.
-          </p>
-        )}
-      </div>
     </div>
   );
 }
