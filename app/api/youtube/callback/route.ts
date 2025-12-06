@@ -51,7 +51,6 @@ export async function GET(req: NextRequest) {
 
     // Exchange code for tokens
     const tokens = await getTokensFromCode(code);
-    console.log("REFRESH TOKEN:", tokens.refresh_token);
 
     if (!tokens.refresh_token) {
       return NextResponse.redirect(
