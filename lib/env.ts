@@ -15,8 +15,6 @@ const requiredEnvVars = [
   "ENCRYPTION_KEY",
 ] as const;
 
-const optionalEnvVars = ["LOG_LEVEL", "CLERK_WEBHOOK_SECRET"] as const;
-
 /**
  * Validates that all required environment variables are set
  * @throws Error if any required env var is missing
@@ -50,9 +48,3 @@ export function getRequiredEnv(key: string): string {
   return value;
 }
 
-/**
- * Get an optional environment variable with a default value
- */
-export function getOptionalEnv(key: string, defaultValue: string): string {
-  return process.env[key] || defaultValue;
-}
