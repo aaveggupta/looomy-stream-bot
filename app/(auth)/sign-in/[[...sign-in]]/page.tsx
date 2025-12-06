@@ -1,7 +1,15 @@
 import { SignIn } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export default function SignInPage() {
+  // Verify beta access before showing sign-in page
+  const betaAccess = cookies().get("beta_access");
+  if (!betaAccess || betaAccess.value !== "granted") {
+    redirect("/access");
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-canvas relative overflow-hidden">
       {/* Background effects */}

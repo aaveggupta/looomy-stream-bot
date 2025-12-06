@@ -22,21 +22,31 @@ const isPublicRoute = createRouteMatcher([
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 
 export default clerkMiddleware(async (auth, request) => {
+  const betaAccess = request.cookies.get("beta_access");
+  const hasBetaAccess = betaAccess?.value === "granted";
+  const { userId } = auth();
+
   // Check if trying to access sign-in/sign-up pages
   if (isAuthRoute(request)) {
-    const betaAccess = request.cookies.get("beta_access");
-
     // If no beta access cookie, redirect to access page
-    if (!betaAccess || betaAccess.value !== "granted") {
+    if (!hasBetaAccess) {
       const url = new URL("/access", request.url);
       return NextResponse.redirect(url);
     }
   }
 
+  // For protected routes, check both authentication AND beta access
   if (!isPublicRoute(request)) {
-    const { userId } = auth();
+    // If not authenticated, redirect to sign-in
     if (!userId) {
       return auth().redirectToSignIn();
+    }
+
+    // If authenticated but no beta access, redirect to access page
+    // This prevents users who signed in via Clerk's hosted page from accessing the app
+    if (!hasBetaAccess) {
+      const url = new URL("/access", request.url);
+      return NextResponse.redirect(url);
     }
   }
 });
