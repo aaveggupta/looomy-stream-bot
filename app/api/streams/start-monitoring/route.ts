@@ -2,10 +2,21 @@ import { auth } from "@clerk/nextjs/server";
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { Platform, StreamStatus } from "@prisma/client";
+import { Platform, StreamStatus, BotConfig } from "@prisma/client";
 import { getAdapter } from "@/lib/adapters";
 import { schedulePollJob } from "@/lib/qstash";
 import { logger } from "@/lib/logger";
+
+/**
+ * Generate a welcome message for the bot to send when monitoring starts
+ * Note: YouTube chat has a 300 character limit
+ */
+function generateWelcomeMessage(botConfig: BotConfig): string {
+  const botName = botConfig.botName || "Looomy";
+  const triggerPhrase = botConfig.triggerPhrase || "@looomybot";
+
+  return `👋 Hi! I'm ${botName}, your AI assistant. Type ${triggerPhrase} + your question and I'll help!`;
+}
 
 /**
  * POST /api/streams/start-monitoring
@@ -30,14 +41,20 @@ export async function POST() {
 
     if (!user?.youtubeRefreshToken) {
       return NextResponse.json(
-        { error: "YouTube not connected. Please connect your YouTube channel first." },
+        {
+          error:
+            "YouTube not connected. Please connect your YouTube channel first.",
+        },
         { status: 400 }
       );
     }
 
     if (!user.documents || user.documents.length === 0) {
       return NextResponse.json(
-        { error: "No documents embedded. Please upload and embed documents first." },
+        {
+          error:
+            "No documents embedded. Please upload and embed documents first.",
+        },
         { status: 400 }
       );
     }
@@ -81,7 +98,8 @@ export async function POST() {
     if (activeStreams.length === 0) {
       return NextResponse.json(
         {
-          error: "No live streams found. Make sure you are currently streaming on YouTube.",
+          error:
+            "No live streams found. Make sure you are currently streaming on YouTube.",
           success: false,
         },
         { status: 404 }
@@ -151,6 +169,25 @@ export async function POST() {
           );
         }
 
+        // Send welcome message to chat
+        try {
+          const welcomeMessage = generateWelcomeMessage(botConfig);
+          await adapter.sendMessage(
+            { externalChatId: stream.externalChatId, platform },
+            welcomeMessage
+          );
+          logger.info(
+            { sessionId: reactivated.id },
+            "Sent welcome message for reactivated session"
+          );
+        } catch (welcomeError) {
+          logger.error(
+            { sessionId: reactivated.id, error: welcomeError },
+            "Failed to send welcome message for reactivated session"
+          );
+          // Don't fail the whole operation if welcome message fails
+        }
+
         reactivatedSessions.push({
           id: reactivated.id,
           title: reactivated.title,
@@ -187,6 +224,25 @@ export async function POST() {
         );
       }
 
+      // Send welcome message to chat
+      try {
+        const welcomeMessage = generateWelcomeMessage(botConfig);
+        await adapter.sendMessage(
+          { externalChatId: stream.externalChatId, platform },
+          welcomeMessage
+        );
+        logger.info(
+          { sessionId: session.id },
+          "Sent welcome message for new session"
+        );
+      } catch (welcomeError) {
+        logger.error(
+          { sessionId: session.id, error: welcomeError },
+          "Failed to send welcome message for new session"
+        );
+        // Don't fail the whole operation if welcome message fails
+      }
+
       createdSessions.push({
         id: session.id,
         title: session.title,
@@ -199,7 +255,11 @@ export async function POST() {
       );
     }
 
-    const allSessions = [...createdSessions, ...reactivatedSessions, ...existingSessions];
+    const allSessions = [
+      ...createdSessions,
+      ...reactivatedSessions,
+      ...existingSessions,
+    ];
 
     return NextResponse.json({
       success: true,
