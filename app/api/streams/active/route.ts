@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { StreamStatus } from "@prisma/client";
+import { logger } from "@/lib/logger";
 
 /**
  * GET /api/streams/active
@@ -77,7 +78,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Get active streams error:", error);
+    logger.error({ error }, "Get active streams error");
     return NextResponse.json(
       { error: "Failed to fetch active streams" },
       { status: 500 }

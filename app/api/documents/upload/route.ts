@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { chunkText } from "@/lib/chunker";
 import { generateEmbeddings } from "@/lib/openai";
 import { upsertVectors, VectorMetadata } from "@/lib/pinecone";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: NextRequest) {
   try {
@@ -95,7 +96,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Upload error:", error);
+    logger.error({ error }, "Upload error");
     return NextResponse.json(
       { error: "Failed to process document" },
       { status: 500 }

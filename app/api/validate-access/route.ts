@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { logger } from "@/lib/logger";
 
 // Set your secret access key here or in environment variable
 const VALID_ACCESS_KEY = process.env.BETA_ACCESS_KEY;
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
       );
     }
   } catch (error) {
-    console.error("Access validation error:", error);
+    logger.error({ error }, "Access validation error");
     return NextResponse.json(
       { error: "Failed to validate access" },
       { status: 500 }

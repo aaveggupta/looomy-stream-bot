@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getAuthUrl } from "@/lib/youtube";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -15,7 +16,7 @@ export async function GET() {
 
     return NextResponse.redirect(authUrl);
   } catch (error) {
-    console.error("YouTube connect error:", error);
+    logger.error({ error }, "YouTube connect error");
     return NextResponse.json(
       { error: "Failed to initiate YouTube connection" },
       { status: 500 }

@@ -1,5 +1,15 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { validateEnv } from "@/lib/env";
+
+// Validate environment variables on startup
+try {
+  validateEnv();
+} catch (error) {
+  console.error("Environment validation failed:", error);
+  // In production, you might want to throw here to prevent the app from starting
+  // For now, we'll log and continue to allow graceful degradation
+}
 
 const isPublicRoute = createRouteMatcher([
   "/",

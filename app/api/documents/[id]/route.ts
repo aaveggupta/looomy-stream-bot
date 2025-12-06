@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { deleteVectorsByDocument } from "@/lib/pinecone";
+import { logger } from "@/lib/logger";
 
 export async function DELETE(
   req: NextRequest,
@@ -35,7 +36,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Delete document error:", error);
+    logger.error({ error }, "Delete document error");
     return NextResponse.json(
       { error: "Failed to delete document" },
       { status: 500 }

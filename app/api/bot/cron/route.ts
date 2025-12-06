@@ -13,6 +13,7 @@ import {
   type YouTubeLiveChatMessage,
 } from "@/lib/message-queue";
 import { logger, cronLogger } from "@/lib/logger";
+import { PINECONE_CONFIG, PLATFORM_CONFIG } from "@/lib/config";
 
 // Message tracker to avoid re-processing messages across cron runs
 const messageTracker = new MessageTracker();
@@ -134,7 +135,7 @@ export async function GET(req: NextRequest) {
             const matches = await queryVectors(
               config.userId,
               questionEmbedding,
-              3
+              PINECONE_CONFIG.DEFAULT_TOP_K
             );
 
             logger.info({ userId: config.userId, messageIndex: msgIndex, matchCount: matches.length }, `Found ${matches.length} relevant context match(es)`);
@@ -161,10 +162,10 @@ export async function GET(req: NextRequest) {
               logger.debug({ userId: config.userId, messageIndex: msgIndex, responseLength: response.length }, `Generated response (${response.length} chars)`);
             }
 
-            // Truncate to YouTube's 200 char limit
+            // Truncate to platform message limit
             const originalLength = replyText.length;
-            if (replyText.length > 200) {
-              replyText = replyText.slice(0, 197) + "...";
+            if (replyText.length > PLATFORM_CONFIG.MAX_MESSAGE_LENGTH) {
+              replyText = replyText.slice(0, PLATFORM_CONFIG.TRUNCATE_LENGTH) + PLATFORM_CONFIG.MESSAGE_TRUNCATE_SUFFIX;
               logger.debug({ userId: config.userId, messageIndex: msgIndex, originalLength, truncatedLength: replyText.length }, `Truncated reply: ${originalLength} → ${replyText.length} chars`);
             }
 

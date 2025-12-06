@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 import { BotPersonality } from "@prisma/client";
+import { OPENAI_CONFIG, TIMEOUT_CONFIG } from "./config";
+import { getRequiredEnv } from "./env";
 
 let openaiClient: OpenAI | null = null;
 
@@ -25,7 +27,8 @@ const personalityInstructions: Record<BotPersonality, string> = {
 export function getOpenAI(): OpenAI {
   if (!openaiClient) {
     openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
+      apiKey: getRequiredEnv("OPENAI_API_KEY"),
+      timeout: TIMEOUT_CONFIG.OPENAI,
     });
   }
   return openaiClient;
@@ -34,7 +37,7 @@ export function getOpenAI(): OpenAI {
 export async function generateEmbedding(text: string): Promise<number[]> {
   const openai = getOpenAI();
   const response = await openai.embeddings.create({
-    model: "text-embedding-3-small",
+    model: OPENAI_CONFIG.EMBEDDING_MODEL,
     input: text,
   });
   return response.data[0].embedding;
@@ -45,7 +48,7 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
 
   const openai = getOpenAI();
   const response = await openai.embeddings.create({
-    model: "text-embedding-3-small",
+    model: OPENAI_CONFIG.EMBEDDING_MODEL,
     input: texts,
   });
 
@@ -66,7 +69,7 @@ export async function generateChatResponse(
   const personalityInstruction = personalityInstructions[personality];
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: OPENAI_CONFIG.CHAT_MODEL,
     messages: [
       {
         role: "system",
@@ -88,8 +91,8 @@ Rules:
           : `Question: ${question}`,
       },
     ],
-    max_tokens: 50,
-    temperature: 0.7,
+    max_tokens: OPENAI_CONFIG.MAX_TOKENS,
+    temperature: OPENAI_CONFIG.TEMPERATURE,
   });
 
   return (

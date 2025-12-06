@@ -1,10 +1,12 @@
 import { google } from "googleapis";
+import { TIMEOUT_CONFIG } from "./config";
+import { getRequiredEnv } from "./env";
 
 export function getOAuth2Client() {
   return new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
+    getRequiredEnv("GOOGLE_CLIENT_ID"),
+    getRequiredEnv("GOOGLE_CLIENT_SECRET"),
+    getRequiredEnv("GOOGLE_REDIRECT_URI")
   );
 }
 
@@ -23,7 +25,21 @@ export function getAuthUrl(state: string) {
 
 export async function getTokensFromCode(code: string) {
   const oauth2Client = getOAuth2Client();
-  const { tokens } = await oauth2Client.getToken(code);
+
+  const getTokenPromise = oauth2Client.getToken(code);
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(
+      () => reject(new Error("YouTube OAuth token exchange timeout")),
+      TIMEOUT_CONFIG.YOUTUBE
+    )
+  );
+
+  const { tokens } = (await Promise.race([
+    getTokenPromise,
+    timeoutPromise,
+  ])) as Awaited<typeof getTokenPromise>;
+
   return tokens;
 }
 
@@ -31,36 +47,56 @@ export async function getYouTubeClient(refreshToken: string) {
   const oauth2Client = getOAuth2Client();
   oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-  // Refresh access token
-  const { credentials } = await oauth2Client.refreshAccessToken();
+  // Refresh access token with timeout
+  const refreshPromise = oauth2Client.refreshAccessToken();
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(
+      () => reject(new Error("YouTube token refresh timeout")),
+      TIMEOUT_CONFIG.YOUTUBE
+    )
+  );
+
+  const { credentials } = (await Promise.race([
+    refreshPromise,
+    timeoutPromise,
+  ])) as Awaited<typeof refreshPromise>;
+
   oauth2Client.setCredentials(credentials);
 
   return google.youtube({ version: "v3", auth: oauth2Client });
 }
 
 export async function getBotYouTubeClient() {
-  const botRefreshToken = process.env.BOT_YOUTUBE_REFRESH_TOKEN;
-  if (!botRefreshToken) {
-    throw new Error("BOT_YOUTUBE_REFRESH_TOKEN not configured");
-  }
+  const botRefreshToken = getRequiredEnv("BOT_YOUTUBE_REFRESH_TOKEN");
   return getYouTubeClient(botRefreshToken);
 }
 
 export async function getBotChannelId() {
-  const botRefreshToken = process.env.BOT_YOUTUBE_REFRESH_TOKEN;
-  if (!botRefreshToken) {
-    throw new Error("BOT_YOUTUBE_REFRESH_TOKEN not configured");
-  }
+  const botRefreshToken = getRequiredEnv("BOT_YOUTUBE_REFRESH_TOKEN");
   const channelInfo = await getChannelInfo(botRefreshToken);
   return channelInfo.id;
 }
 
 export async function getChannelInfo(refreshToken: string) {
   const youtube = await getYouTubeClient(refreshToken);
-  const response = await youtube.channels.list({
+
+  const listPromise = youtube.channels.list({
     part: ["snippet"],
     mine: true,
   });
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(
+      () => reject(new Error("YouTube API timeout")),
+      TIMEOUT_CONFIG.YOUTUBE
+    )
+  );
+
+  const response = (await Promise.race([
+    listPromise,
+    timeoutPromise,
+  ])) as Awaited<typeof listPromise>;
 
   const channel = response.data.items?.[0];
   if (!channel) {
@@ -75,11 +111,24 @@ export async function getChannelInfo(refreshToken: string) {
 
 export async function getActiveLiveBroadcast(refreshToken: string) {
   const youtube = await getYouTubeClient(refreshToken);
-  const response = await youtube.liveBroadcasts.list({
+
+  const listPromise = youtube.liveBroadcasts.list({
     part: ["snippet", "status"],
     broadcastStatus: "active",
     broadcastType: "all",
   });
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(
+      () => reject(new Error("YouTube API timeout")),
+      TIMEOUT_CONFIG.YOUTUBE
+    )
+  );
+
+  const response = (await Promise.race([
+    listPromise,
+    timeoutPromise,
+  ])) as Awaited<typeof listPromise>;
 
   const broadcast = response.data.items?.[0];
   if (!broadcast) {
@@ -99,11 +148,24 @@ export async function getLiveChatMessages(
   pageToken?: string
 ) {
   const youtube = await getYouTubeClient(refreshToken);
-  const response = await youtube.liveChatMessages.list({
+
+  const listPromise = youtube.liveChatMessages.list({
     liveChatId,
     part: ["snippet", "authorDetails"],
     pageToken,
   });
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(
+      () => reject(new Error("YouTube API timeout")),
+      TIMEOUT_CONFIG.YOUTUBE
+    )
+  );
+
+  const response = (await Promise.race([
+    listPromise,
+    timeoutPromise,
+  ])) as Awaited<typeof listPromise>;
 
   return {
     messages: response.data.items || [],
@@ -118,7 +180,8 @@ export async function sendLiveChatMessage(
   message: string
 ) {
   const youtube = await getYouTubeClient(refreshToken);
-  await youtube.liveChatMessages.insert({
+
+  const insertPromise = youtube.liveChatMessages.insert({
     part: ["snippet"],
     requestBody: {
       snippet: {
@@ -130,6 +193,15 @@ export async function sendLiveChatMessage(
       },
     },
   });
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(
+      () => reject(new Error("YouTube send message timeout")),
+      TIMEOUT_CONFIG.YOUTUBE
+    )
+  );
+
+  await Promise.race([insertPromise, timeoutPromise]);
 }
 
 export async function sendLiveChatMessageAsBot(
@@ -137,7 +209,8 @@ export async function sendLiveChatMessageAsBot(
   message: string
 ) {
   const youtube = await getBotYouTubeClient();
-  await youtube.liveChatMessages.insert({
+
+  const insertPromise = youtube.liveChatMessages.insert({
     part: ["snippet"],
     requestBody: {
       snippet: {
@@ -149,4 +222,13 @@ export async function sendLiveChatMessageAsBot(
       },
     },
   });
+
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(
+      () => reject(new Error("YouTube send message timeout")),
+      TIMEOUT_CONFIG.YOUTUBE
+    )
+  );
+
+  await Promise.race([insertPromise, timeoutPromise]);
 }

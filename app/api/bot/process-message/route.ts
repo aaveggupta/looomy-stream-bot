@@ -8,6 +8,7 @@ import { trackApiUsage } from "@/lib/quota";
 import { logger } from "@/lib/logger";
 import { MessageJobPayload } from "@/lib/qstash";
 import { BotPersonality, Platform } from "@prisma/client";
+import { PINECONE_CONFIG, PLATFORM_CONFIG } from "@/lib/config";
 
 /**
  * Process a single message job dispatched from QStash
@@ -38,10 +39,7 @@ export async function POST(req: NextRequest) {
       externalChatId,
     } = payload;
 
-    logger.info(
-      { sessionId, messageId, authorName },
-      "Processing message job"
-    );
+    logger.info({ sessionId, messageId, authorName }, "Processing message job");
 
     // Check if message was already processed (deduplication)
     const existing = await prisma.processedMessage.findUnique({
@@ -67,7 +65,11 @@ export async function POST(req: NextRequest) {
         { sessionId, messageId, embeddingLength: embedding?.length },
         "Querying Pinecone for context"
       );
-      const matches = await queryVectors(userId, embedding, 3);
+      const matches = await queryVectors(
+        userId,
+        embedding,
+        PINECONE_CONFIG.DEFAULT_TOP_K
+      );
 
       // Build context
       const context = matches
@@ -76,13 +78,23 @@ export async function POST(req: NextRequest) {
         .join("\n\n");
 
       logger.debug(
-        { sessionId, messageId, matchCount: matches.length, contextLength: context.length },
+        {
+          sessionId,
+          messageId,
+          matchCount: matches.length,
+          contextLength: context.length,
+        },
         "Pinecone query complete"
       );
 
       // Generate AI response
       logger.debug(
-        { sessionId, messageId, botName: botConfig.botName, personality: botConfig.personality },
+        {
+          sessionId,
+          messageId,
+          botName: botConfig.botName,
+          personality: botConfig.personality,
+        },
         "Generating AI response"
       );
       const response = await generateChatResponse(
@@ -95,9 +107,11 @@ export async function POST(req: NextRequest) {
 
       let replyText = `@${authorName} ${response}`;
 
-      // Truncate to 200 chars (YouTube limit)
-      if (replyText.length > 200) {
-        replyText = replyText.slice(0, 197) + "...";
+      // Truncate to platform message limit
+      if (replyText.length > PLATFORM_CONFIG.MAX_MESSAGE_LENGTH) {
+        replyText =
+          replyText.slice(0, PLATFORM_CONFIG.TRUNCATE_LENGTH) +
+          PLATFORM_CONFIG.MESSAGE_TRUNCATE_SUFFIX;
       }
 
       logger.debug(
@@ -115,10 +129,7 @@ export async function POST(req: NextRequest) {
         replyText
       );
 
-      logger.debug(
-        { sessionId, messageId },
-        "Reply sent, recording to DB"
-      );
+      logger.debug({ sessionId, messageId }, "Reply sent, recording to DB");
 
       // Record processed message with reply
       await prisma.processedMessage.create({
@@ -145,7 +156,8 @@ export async function POST(req: NextRequest) {
         duration: `${duration}ms`,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
       logger.error(
         { sessionId, messageId, error: errorMessage, stack: errorStack },

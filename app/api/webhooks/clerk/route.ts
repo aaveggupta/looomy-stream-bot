@@ -3,12 +3,13 @@ export const dynamic = "force-dynamic";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
-    console.error("CLERK_WEBHOOK_SECRET is not set in environment variables");
+    logger.error("CLERK_WEBHOOK_SECRET is not set in environment variables");
     return new Response("Error: Webhook secret not configured", {
       status: 500,
     });
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
       "svix-signature": svix_signature,
     }) as WebhookEvent;
   } catch (err) {
-    console.error("Error verifying webhook:", err);
+    logger.error({ error: err }, "Error verifying webhook");
     return new Response("Error: Verification failed", { status: 400 });
   }
 
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
     const email = email_addresses[0]?.email_address;
 
     if (!email) {
-      console.error(`Webhook ${eventType}: No email found for user ${id}`);
+      logger.error({ eventType, userId: id }, "Webhook: No email found for user");
       return new Response("Error: No email found", { status: 400 });
     }
 
@@ -76,14 +77,9 @@ export async function POST(req: Request) {
           email,
         },
       });
-      console.log(
-        `Webhook ${eventType}: Successfully processed user ${id} (${email})`
-      );
+      logger.info({ eventType, userId: id, email }, "Webhook: Successfully processed user");
     } catch (error) {
-      console.error(
-        `Webhook ${eventType}: Failed to upsert user ${id}:`,
-        error
-      );
+      logger.error({ error, eventType, userId: id }, "Webhook: Failed to upsert user");
       return new Response("Error: Database operation failed", { status: 500 });
     }
   }

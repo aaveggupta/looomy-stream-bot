@@ -1,3 +1,5 @@
+import { CHUNK_CONFIG } from "./config";
+
 export interface TextChunk {
   text: string;
   index: number;
@@ -5,8 +7,8 @@ export interface TextChunk {
 
 export function chunkText(
   text: string,
-  chunkSize: number = 1000,
-  overlap: number = 200
+  chunkSize: number = CHUNK_CONFIG.DEFAULT_CHUNK_SIZE,
+  overlap: number = CHUNK_CONFIG.DEFAULT_OVERLAP
 ): TextChunk[] {
   const chunks: TextChunk[] = [];
 

@@ -3,10 +3,12 @@
  * Adjusts polling intervals based on chat activity
  */
 
-const MIN_POLLING_INTERVAL = 2000; // 2 seconds (lower bound)
-const MAX_POLLING_INTERVAL = 30000; // 30 seconds (upper bound)
-const IDLE_MULTIPLIER = 4; // Multiply interval by 4 when idle
-const ACTIVE_THRESHOLD = 3; // Consider active if messages in last N polls
+import { POLLING_CONFIG } from "./config";
+
+const MIN_POLLING_INTERVAL = POLLING_CONFIG.MIN_INTERVAL;
+const MAX_POLLING_INTERVAL = POLLING_CONFIG.MAX_INTERVAL;
+const IDLE_MULTIPLIER = POLLING_CONFIG.IDLE_MULTIPLIER;
+const ACTIVE_THRESHOLD = POLLING_CONFIG.ACTIVE_THRESHOLD;
 
 /**
  * Calculate next polling interval based on activity

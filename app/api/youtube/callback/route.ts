@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getTokensFromCode, getChannelInfo } from "@/lib/youtube";
+import { logger } from "@/lib/logger";
 
 export async function GET(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
     const error = searchParams.get("error");
 
     if (error) {
-      console.error("YouTube OAuth error:", error);
+      logger.error({ error }, "YouTube OAuth error");
       return NextResponse.redirect(
         new URL(
           "/dashboard/settings?error=oauth_denied",
@@ -80,7 +81,7 @@ export async function GET(req: NextRequest) {
       )
     );
   } catch (error) {
-    console.error("YouTube callback error:", error);
+    logger.error({ error }, "YouTube callback error");
     return NextResponse.redirect(
       new URL(
         "/dashboard/settings?error=callback_failed",

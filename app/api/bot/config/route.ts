@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { BotPersonality } from "@prisma/client";
+import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,7 @@ export async function GET() {
 
     return NextResponse.json({ config });
   } catch (error) {
-    console.error("Get config error:", error);
+    logger.error({ error }, "Get config error");
     return NextResponse.json(
       { error: "Failed to fetch config" },
       { status: 500 }
@@ -58,7 +59,7 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ config });
   } catch (error) {
-    console.error("Update config error:", error);
+    logger.error({ error }, "Update config error");
     return NextResponse.json(
       { error: "Failed to update config" },
       { status: 500 }
