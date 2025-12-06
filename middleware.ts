@@ -35,18 +35,18 @@ export default clerkMiddleware(async (auth, request) => {
     }
   }
 
-  // For protected routes, check both authentication AND beta access
+  // For protected routes, check both beta access AND authentication
   if (!isPublicRoute(request)) {
-    // If not authenticated, redirect to sign-in
-    if (!userId) {
-      return auth().redirectToSignIn();
-    }
-
-    // If authenticated but no beta access, redirect to access page
-    // This prevents users who signed in via Clerk's hosted page from accessing the app
+    // First check for beta access - users without beta access
+    // should go to access page, not sign-in (accounts.looomy.com)
     if (!hasBetaAccess) {
       const url = new URL("/access", request.url);
       return NextResponse.redirect(url);
+    }
+
+    // If has beta access but not authenticated, redirect to sign-in
+    if (!userId) {
+      return auth().redirectToSignIn();
     }
   }
 });
