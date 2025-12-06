@@ -13,7 +13,6 @@ const isPublicRoute = createRouteMatcher([
   // Bot API endpoints use bearer token auth, not Clerk
   "/api/bot/poll",
   "/api/bot/cron",
-  "/api/bot/discover-streams",
   "/api/bot/cleanup-streams",
   "/api/bot/cleanup-messages",
   "/api/bot/poll-stream(.*)",

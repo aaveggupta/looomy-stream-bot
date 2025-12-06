@@ -59,17 +59,20 @@ AI-Powered YouTube Stream Chat Bot that answers audience questions using your cu
 ### Setup
 
 1. **Clone the repository:**
+
 ```bash
 git clone <repo-url>
 cd looomy-stream-bot
 ```
 
 2. **Install dependencies:**
+
 ```bash
 npm install
 ```
 
 3. **Copy environment variables:**
+
 ```bash
 cp .env.example .env
 ```
@@ -77,16 +80,19 @@ cp .env.example .env
 4. **Fill in all environment variables in `.env`** (see [Environment Variables](#environment-variables))
 
 5. **Generate Prisma client:**
+
 ```bash
 npm run db:generate
 ```
 
 6. **Push database schema:**
+
 ```bash
 npm run db:push
 ```
 
 7. **Start development server:**
+
 ```bash
 npm run dev
 ```
@@ -136,16 +142,19 @@ npm run dev
 The bot requires a **separate YouTube channel** to reply in chat (like Nightbot). This allows the bot to have its own name and avatar instead of appearing as the streamer.
 
 1. **Create a Bot YouTube Channel:**
+
    - Go to YouTube and create a new channel (e.g., "Looomy Bot")
    - Customize the channel name and avatar as desired
 
 2. **Get Bot OAuth Token:**
+
    - Temporarily modify your app to allow signing in with the bot account
    - Go through the YouTube OAuth flow with the bot account
    - Copy the refresh token from the database
    - Add it to `BOT_YOUTUBE_REFRESH_TOKEN` in `.env`
 
 3. **Configure Bot Details:**
+
 ```bash
 BOT_YOUTUBE_REFRESH_TOKEN=<bot_refresh_token>
 NEXT_PUBLIC_BOT_CHANNEL_NAME=Looomy Bot
@@ -166,6 +175,7 @@ NEXT_PUBLIC_BOT_CHANNEL_URL=https://www.youtube.com/@looomy-bot
 4. Ensure `NEXT_PUBLIC_APP_URL` is set correctly for callbacks
 
 **Important for Local Development**: QStash cannot reach `localhost`. Use ngrok:
+
 ```bash
 ngrok http 3000
 # Update NEXT_PUBLIC_APP_URL to ngrok URL
@@ -175,7 +185,6 @@ ngrok http 3000
 
 The following cron jobs are configured in `vercel.json`:
 
-- **Stream Discovery** (`/api/bot/discover-streams`): Runs every 3 minutes
 - **Stream Cleanup** (`/api/bot/cleanup-streams`): Runs every 15 minutes
 - **Message Cleanup** (`/api/bot/cleanup-messages`): Runs daily at 2 AM
 
@@ -186,6 +195,7 @@ The following cron jobs are configured in `vercel.json`:
 ### The Big Picture
 
 Think of it like a restaurant:
+
 - **Cron Jobs** = The manager checking for new customers every few minutes
 - **QStash** = Waiters serving each table independently
 - **Stream Sessions** = Each table/customer
@@ -197,13 +207,8 @@ Think of it like a restaurant:
 
 These run on a fixed schedule and handle **system-wide** tasks:
 
-**🔍 Discovery Job (Every 3 minutes)**
-- Checks: "Are there any users with active bots?"
-- For each user: "Do they have a live YouTube stream?"
-- If yes: Creates a `StreamSession` record
-- Then: Tells QStash "Start polling this stream!"
-
 **🧹 Cleanup Jobs (Every 15 minutes & Daily)**
+
 - Check for stale sessions (streams that ended)
 - Delete old messages (older than retention period)
 - Mark dead sessions as ENDED
@@ -213,6 +218,7 @@ These run on a fixed schedule and handle **system-wide** tasks:
 These handle **per-stream polling** - each stream gets its own independent polling schedule.
 
 **📡 Polling Job (Per Stream, Adaptive Timing)**
+
 - Fetches new messages from YouTube chat
 - Processes messages (check trigger phrase, generate replies)
 - Sends bot replies
@@ -222,22 +228,14 @@ These handle **per-stream polling** - each stream gets its own independent polli
 
 ### Complete Flow
 
-#### Step 1: User Enables Bot
-```
-User clicks "Enable Bot" in dashboard
-  ↓
-BotConfig.isActive = true
-  ↓
-Discovery job will find their streams (runs every 3 min)
-```
+#### Step 1: User Starts Stream Monitoring
 
-#### Step 2: Discovery Finds Stream (Every 3 minutes)
 ```
-Cron job runs: /api/bot/discover-streams
+User clicks "Start Monitoring" in dashboard
   ↓
-Checks all users with isActive = true
+POST /api/streams/start-monitoring
   ↓
-For each user: "Do you have a live stream?"
+Checks for live YouTube streams
   ↓
 If YES:
   - Creates StreamSession record
@@ -246,7 +244,8 @@ If YES:
 QStash creates a job → Goes to Queues tab
 ```
 
-#### Step 3: QStash Polls Stream (Per Stream)
+#### Step 2: QStash Polls Stream (Per Stream)
+
 ```
 QStash job executes: /api/bot/poll-stream/SESSION_ID
   ↓
@@ -268,6 +267,7 @@ Creates new QStash job → Cycle continues
 ```
 
 #### Step 4: Cleanup (Background Maintenance)
+
 ```
 Every 15 minutes:
   - Check sessions not polled in >15 min
@@ -287,10 +287,9 @@ Daily:
                      │
                      ▼
 ┌─────────────────────────────────────────────────────────┐
-│         CRON: Discovery (Every 3 minutes)              │
-│  /api/bot/discover-streams                            │
+│         USER: Start Monitoring (On-Demand)            │
+│  POST /api/streams/start-monitoring                   │
 │                                                         │
-│  • Find users with active bots                        │
 │  • Check for live YouTube streams                     │
 │  • Create StreamSession for each stream               │
 │  • Schedule first QStash poll                         │
@@ -339,10 +338,12 @@ ACTIVE_THRESHOLD = 3                         // Need 3+ empty polls to slow down
 #### How It Works
 
 1. **Track Activity**: Each poll checks if messages were found
+
    - Found messages? → Reset `consecutiveEmptyPolls` to 0
    - No messages? → Increment `consecutiveEmptyPolls` by 1
 
 2. **Calculate Next Interval**:
+
    - If `consecutiveEmptyPolls >= 3` (idle chat): Slow down (multiply by 4, cap at 30s)
    - Else (active chat): Use platform recommended interval (usually 5s)
 
@@ -356,6 +357,7 @@ ACTIVE_THRESHOLD = 3                         // Need 3+ empty polls to slow down
 **Mechanism**: QStash doesn't cancel jobs - the endpoint stops scheduling new ones.
 
 1. **Cleanup detects ended stream** (every 15 min):
+
    - Session not polled in >15 minutes
    - Verifies stream is offline via YouTube API
    - Marks session as `ENDED` in database
@@ -366,6 +368,7 @@ ACTIVE_THRESHOLD = 3                         // Need 3+ empty polls to slow down
    - Polling chain stops
 
 **Other stop scenarios**:
+
 - Bot disabled: Session marked `ENDED`, next poll skips
 - Critical error: Session marked `ERROR`, polling stops
 - Live chat ended: Session marked `ENDED` when YouTube returns 403 "liveChatEnded"
@@ -374,18 +377,21 @@ ACTIVE_THRESHOLD = 3                         // Need 3+ empty polls to slow down
 ### Why Two Systems?
 
 **Cron Jobs (Vercel Cron):**
+
 - ✅ Perfect for scheduled tasks (every 3 min, daily, etc.)
 - ✅ Simple, reliable
 - ❌ Can't easily do per-item scheduling
 - ❌ All users processed in one run
 
 **QStash:**
+
 - ✅ Perfect for per-stream independent scheduling
 - ✅ Adaptive timing (each stream polls at its own rate)
 - ✅ Survives server restarts (jobs stored in QStash)
 - ✅ Can handle thousands of streams independently
 
 **Why Not Just Cron?**
+
 - ❌ All streams poll at the same time (inefficient)
 - ❌ Can't adapt timing per stream (active vs idle)
 - ❌ One slow stream blocks others
@@ -398,6 +404,7 @@ ACTIVE_THRESHOLD = 3                         // Need 3+ empty polls to slow down
 ### Quick Start (5 minutes)
 
 #### 1. Setup Database
+
 ```bash
 # Generate Prisma client
 npm run db:generate
@@ -410,7 +417,9 @@ npm run db:studio
 ```
 
 #### 2. Configure Environment
+
 Add to `.env`:
+
 ```bash
 QSTASH_TOKEN="your-token-from-upstash"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
@@ -418,23 +427,22 @@ BOT_POLL_SECRET="any-secret-string"
 ```
 
 #### 3. Start Server
+
 ```bash
 npm run dev
 ```
 
 #### 4. Run Test Script
+
 ```bash
 npm run test:local
 ```
 
 Or manually test endpoints:
+
 ```bash
 # Set your secret
 export BOT_POLL_SECRET="your-secret"
-
-# Test discovery
-curl -X GET http://localhost:3000/api/bot/discover-streams \
-  -H "Authorization: Bearer $BOT_POLL_SECRET"
 
 # Test monitoring
 curl -X GET http://localhost:3000/api/bot/monitoring \
@@ -444,22 +452,29 @@ curl -X GET http://localhost:3000/api/bot/monitoring \
 ### Testing with Real YouTube Stream
 
 #### Step 1: Prepare
+
 1. Connect YouTube account in dashboard
 2. Upload a test document
 3. Wait for embeddings to complete
 
 #### Step 2: Go Live
+
 1. Start a YouTube live stream
 2. Enable bot in dashboard (`/dashboard`)
 
-#### Step 3: Trigger Discovery
+#### Step 3: Start Monitoring
+
+Use the "Start Monitoring" button in the dashboard, or make a POST request:
+
 ```bash
-curl -X GET http://localhost:3000/api/bot/discover-streams \
-  -H "Authorization: Bearer $BOT_POLL_SECRET"
+curl -X POST http://localhost:3000/api/streams/start-monitoring \
+  -H "Authorization: Bearer YOUR_CLERK_SESSION_TOKEN"
 ```
 
 #### Step 4: Test Polling
+
 Get session ID from database, then:
+
 ```bash
 SESSION_ID="your-session-id-here"
 
@@ -470,7 +485,9 @@ curl -X POST http://localhost:3000/api/bot/poll-stream/$SESSION_ID \
 ```
 
 #### Step 5: Test Message
+
 Send in YouTube chat:
+
 ```
 @looomybot What is this about?
 ```
@@ -480,6 +497,7 @@ Then trigger poll again to see response.
 ### Verification Checklist
 
 After setup, verify:
+
 - [ ] Database tables exist (`StreamSession`, `ProcessedMessage`, `ApiQuota`)
 - [ ] Discovery endpoint returns success
 - [ ] Monitoring endpoint returns data
@@ -497,12 +515,14 @@ After setup, verify:
 **Important**: QStash counts **every HTTP request** (polling job) as a "message", not just bot replies.
 
 **What QStash Counts:**
+
 - Each time QStash executes a polling job, it counts as 1 "message"
 - Poll executed → Counts as 1 message
 - Poll executed → Counts as 1 message
 - ... (continues)
 
 **What Actually Happens in Each Poll:**
+
 1. Fetches messages from YouTube chat
 2. Checks each message:
    - Already processed? → Skip
@@ -511,9 +531,10 @@ After setup, verify:
 3. Schedules next poll
 
 **Example:**
+
 ```
 Poll #1:  Found 0 messages → No reply
-Poll #2:  Found 1 message, no trigger → No reply  
+Poll #2:  Found 1 message, no trigger → No reply
 Poll #3:  Found 1 message, has trigger → ✅ REPLY SENT
 Poll #4:  Found 0 messages → No reply
 ...
@@ -531,9 +552,11 @@ This is **normal behavior**! The bot polls frequently to catch questions quickly
 QStash has different tabs for different types of jobs:
 
 **✅ Where Your Jobs Appear:**
+
 1. **Queues Tab** - Pending jobs waiting to execute
+
    - Shows jobs that are scheduled but not yet executed
-   - Look here immediately after running `discover-streams`
+   - Look here immediately after starting stream monitoring
 
 2. **Logs Tab** - Executed jobs (success/failure)
    - Shows all jobs that QStash has attempted to execute
@@ -541,22 +564,24 @@ QStash has different tabs for different types of jobs:
    - Shows the HTTP response from your endpoint
 
 **❌ Where Jobs DON'T Appear:**
+
 - **Schedules Tab** - This is ONLY for recurring cron-like schedules
 - Our implementation uses one-time jobs (`publishJSON()`), not recurring schedules
 
 ### How to Check
 
-1. **Run Discovery:**
-```bash
-curl -X GET http://localhost:3000/api/bot/discover-streams \
-  -H "Authorization: Bearer YOUR_BOT_POLL_SECRET"
-```
+1. **Start Monitoring:**
+
+   - Use the "Start Monitoring" button in the dashboard, or
+   - Make a POST request to `/api/streams/start-monitoring`
 
 2. **Check QStash Dashboard:**
+
    - Go to **Queues** tab - You should see jobs with URL like: `https://your-ngrok-url.ngrok-free.dev/api/bot/poll-stream/SESSION_ID`
    - Wait a few seconds, then check **Logs** tab - You'll see the execution attempt
 
 3. **Verify Your Endpoint is Accessible:**
+
 ```bash
 curl -X POST https://your-ngrok-url.ngrok-free.dev/api/bot/poll-stream/SESSION_ID \
   -H "Authorization: Bearer YOUR_BOT_POLL_SECRET" \
@@ -569,10 +594,12 @@ curl -X POST https://your-ngrok-url.ngrok-free.dev/api/bot/poll-stream/SESSION_I
 #### Jobs Not in Queues Tab?
 
 1. **Check dev server logs** - Look for:
+
    - "Scheduled polling job for stream session" ✅ (success)
    - "Failed to schedule polling job" ❌ (error)
 
 2. **Run test script:**
+
 ```bash
 node scripts/test-qstash.js
 ```
@@ -582,11 +609,13 @@ node scripts/test-qstash.js
 #### Jobs in Queues But Not Executing?
 
 1. **Check ngrok is running:**
+
 ```bash
 ngrok http 3000
 ```
 
 2. **Verify NEXT_PUBLIC_APP_URL matches ngrok URL:**
+
 ```bash
 grep NEXT_PUBLIC_APP_URL .env
 ```
@@ -596,6 +625,7 @@ grep NEXT_PUBLIC_APP_URL .env
 #### Jobs Executing But Getting Errors?
 
 Check the **Logs** tab in QStash dashboard:
+
 - **401 Unauthorized** → BOT_POLL_SECRET mismatch
 - **404 Not Found** → Wrong endpoint URL
 - **500 Internal Server Error** → Check your dev server logs
@@ -627,6 +657,7 @@ Check the **Logs** tab in QStash dashboard:
 ### Overview
 
 This section estimates the monthly costs to run Looomy for 100 concurrent streamers, assuming:
+
 - Average stream duration: 2 hours
 - Average polling interval: 5-10 seconds (active streams)
 - Average chat activity: 10% of polls result in bot replies
@@ -637,6 +668,7 @@ This section estimates the monthly costs to run Looomy for 100 concurrent stream
 #### 1. QStash (Message Queue) - $118/month
 
 **Usage:**
+
 - 100 concurrent streams
 - Active streams (50%): Poll every 5 seconds = 12 polls/min
 - Moderate streams (30%): Poll every 10 seconds = 6 polls/min
@@ -644,16 +676,19 @@ This section estimates the monthly costs to run Looomy for 100 concurrent stream
 - **Total: ~49,200 polls/hour = 393,600 polls/day = 11.8M polls/month**
 
 **Pricing:**
+
 - Pay-as-you-go: $1 per 100,000 messages
 - **Cost: $118/month**
 
 #### 2. OpenAI (Embeddings + GPT-4o) - $65/month
 
 **Usage:**
+
 - Embeddings: 1.18M/month (10% of polls trigger replies)
 - GPT-4o responses: 944,640/month (80% find context)
 
 **Pricing:**
+
 - Embeddings: $0.47/month
 - GPT-4o Input: $48.75/month
 - GPT-4o Output: $15.70/month
@@ -662,27 +697,33 @@ This section estimates the monthly costs to run Looomy for 100 concurrent stream
 #### 3. Pinecone (Vector Database) - $0.11/month
 
 **Usage:**
+
 - 1.18M queries/month
 
 **Pricing:**
+
 - $0.096 per 1M queries
 - **Cost: $0.11/month**
 
 #### 4. YouTube API - $0/month
 
 **Usage:**
+
 - 11.8M API calls/month
 
 **Pricing:**
+
 - FREE (no cost)
 - **Note**: At 393,600 polls/day, you'd need **197 YouTube API projects** (each with 10K quota/day)
 
 #### 5. Vercel (Hosting/Serverless) - $452/month
 
 **Usage:**
+
 - 11.8M function invocations/month
 
 **Pricing:**
+
 - $20/month base
 - Additional: $40 per 1M requests
 - **Cost: $452/month**
@@ -690,17 +731,21 @@ This section estimates the monthly costs to run Looomy for 100 concurrent stream
 #### 6. Database (PostgreSQL) - $25/month
 
 **Usage:**
+
 - ~30M DB queries/month
 
 **Pricing:**
+
 - Pro tier: $25/month
 
 #### 7. Clerk (Authentication) - $25/month
 
 **Usage:**
+
 - 100 users (streamers)
 
 **Pricing:**
+
 - Pro tier: $25/month
 
 #### 8. Other Services - $5/month
@@ -709,33 +754,36 @@ This section estimates the monthly costs to run Looomy for 100 concurrent stream
 
 ### Total Monthly Cost
 
-| Service | Monthly Cost | Notes |
-|---------|--------------|-------|
-| **QStash** | $118 | Pay-as-you-go (11.8M messages) |
-| **OpenAI** | $65 | Embeddings + GPT-4o responses |
-| **Pinecone** | $0.11 | Vector queries (minimal) |
-| **YouTube API** | $0 | Free (but need 197 projects) |
-| **Vercel** | $452 | Serverless hosting (11.8M invocations) |
-| **Database** | $25 | PostgreSQL (Pro tier) |
-| **Clerk** | $25 | Authentication (Pro tier) |
-| **Bandwidth** | $5 | Network costs |
-| **TOTAL** | **$690/month** | |
+| Service         | Monthly Cost   | Notes                                  |
+| --------------- | -------------- | -------------------------------------- |
+| **QStash**      | $118           | Pay-as-you-go (11.8M messages)         |
+| **OpenAI**      | $65            | Embeddings + GPT-4o responses          |
+| **Pinecone**    | $0.11          | Vector queries (minimal)               |
+| **YouTube API** | $0             | Free (but need 197 projects)           |
+| **Vercel**      | $452           | Serverless hosting (11.8M invocations) |
+| **Database**    | $25            | PostgreSQL (Pro tier)                  |
+| **Clerk**       | $25            | Authentication (Pro tier)              |
+| **Bandwidth**   | $5             | Network costs                          |
+| **TOTAL**       | **$690/month** |                                        |
 
 ### Cost Optimization Strategies
 
 #### 1. Reduce QStash Costs
+
 - **Current**: $118/month
 - **Optimize**: Use Fixed 10M Plan if consistently hitting 10M+ messages/day
 
 #### 2. Reduce Vercel Costs
+
 - **Current**: $452/month
-- **Optimize**: 
+- **Optimize**:
   - Use Vercel Enterprise for better pricing
   - Consider self-hosting API endpoints
   - Implement request batching
 - **Potential savings**: 50-70% ($226-$316/month)
 
 #### 3. Reduce OpenAI Costs
+
 - **Current**: $65/month
 - **Optimize**:
   - Use GPT-4o-mini for simpler queries
@@ -744,8 +792,9 @@ This section estimates the monthly costs to run Looomy for 100 concurrent stream
 - **Potential savings**: 30-50% ($20-$33/month)
 
 #### 4. Optimize Polling Frequency
+
 - **Current**: 393,600 polls/day
-- **Optimize**: 
+- **Optimize**:
   - Increase idle stream polling to 60s (from 30s)
   - Use webhooks instead of polling (if YouTube supports)
 - **Potential savings**: 30-40% on QStash + Vercel
@@ -753,6 +802,7 @@ This section estimates the monthly costs to run Looomy for 100 concurrent stream
 ### Optimized Cost Estimate
 
 With optimizations:
+
 - **QStash**: $80/month
 - **OpenAI**: $45/month
 - **Pinecone**: $0.11/month
@@ -766,18 +816,21 @@ With optimizations:
 ### Scaling Considerations
 
 **At 1,000 Concurrent Streamers:**
+
 - QStash: ~$1,180/month
 - OpenAI: ~$650/month
 - Vercel: ~$4,520/month
 - **Total: ~$6,900/month**
 
 **At 10,000 Concurrent Streamers:**
+
 - QStash: ~$11,800/month
 - OpenAI: ~$6,500/month
 - Vercel: ~$45,200/month
 - **Total: ~$69,000/month**
 
 **Note**: At this scale, consider:
+
 - Dedicated infrastructure
 - Custom message queue (Kafka, RabbitMQ)
 - Self-hosted API servers
@@ -792,6 +845,7 @@ With optimizations:
 #### QStash Not Working Locally?
 
 **Option 1: Use ngrok**
+
 ```bash
 ngrok http 3000
 # Update NEXT_PUBLIC_APP_URL to ngrok URL
@@ -829,20 +883,24 @@ curl -X GET http://localhost:3000/api/bot/monitoring \
 ### Where to See What
 
 #### Cron Jobs (Vercel Dashboard)
+
 - Go to Vercel → Your Project → Cron Jobs
 - See: Discovery, Cleanup schedules
 - Shows: When they last ran, next run time
 
 #### QStash Jobs (Upstash Dashboard)
+
 - Go to Upstash → QStash → **Queues** tab
 - See: Pending polling jobs
 - Go to **Logs** tab
 - See: Executed polls, success/failure
 
 #### Database (Prisma Studio)
+
 ```bash
 npm run db:studio
 ```
+
 - See: StreamSession records (active streams)
 - See: ProcessedMessage records (all messages)
 - See: ApiQuota records (API usage tracking)
@@ -862,7 +920,8 @@ A: The next discovery (every 3 min) will create a new session and try again.
 A: QStash will keep polling existing streams, but new streams won't be discovered until cron runs again.
 
 **Q: How do I know if it's working?**
-A: 
+A:
+
 1. Check Vercel cron logs (discovery should run every 3 min)
 2. Check QStash Queues tab (should see polling jobs)
 3. Check QStash Logs tab (should see successful polls)
@@ -882,7 +941,6 @@ looomy-stream-bot/
 │   │   └── settings/       # Bot config + YouTube
 │   └── api/                # API routes
 │       ├── bot/            # Bot endpoints
-│       │   ├── discover-streams/  # Stream discovery
 │       │   ├── poll-stream/       # Per-stream polling
 │       │   ├── cleanup-streams/   # Session cleanup
 │       │   ├── cleanup-messages/   # Message cleanup
@@ -922,11 +980,13 @@ looomy-stream-bot/
 **QStash = Waiters** (polls each stream independently)
 
 They work together:
+
 1. Cron finds streams → Creates sessions → Tells QStash to start polling
 2. QStash polls each stream → Processes messages → Schedules next poll
 3. Cron cleans up → Removes dead sessions and old messages
 
 **Key Features:**
+
 - ✅ Scalable architecture (handles 100+ concurrent streams)
 - ✅ Adaptive polling (efficient resource usage)
 - ✅ Message deduplication (no duplicate replies)
@@ -934,6 +994,7 @@ They work together:
 - ✅ Multi-platform ready (YouTube, Twitch, etc.)
 
 **Cost at Scale:**
+
 - 100 streamers: ~$690/month (base) or ~$380/month (optimized)
 - Scales linearly with number of concurrent streams
 
@@ -942,5 +1003,3 @@ They work together:
 ## License
 
 MIT
-
-

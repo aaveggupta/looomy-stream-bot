@@ -144,7 +144,7 @@ The bot requires a **separate YouTube channel** to reply in chat (like Nightbot)
 
 The bot uses a scalable, multi-platform architecture:
 
-- **Stream Discovery**: Automatically discovers active streams every 3 minutes
+- **Manual Stream Discovery**: Users can start monitoring streams on-demand via the dashboard
 - **Per-Stream Polling**: Each stream session is polled independently with adaptive intervals
 - **Message Deduplication**: Persistent ProcessedMessage table ensures no duplicate responses
 - **Adaptive Polling**: Polling intervals adjust based on chat activity (2-30 seconds)
@@ -155,7 +155,6 @@ The bot uses a scalable, multi-platform architecture:
 
 The following cron jobs are configured in `vercel.json`:
 
-- **Stream Discovery** (`/api/bot/discover-streams`): Runs every 3 minutes
 - **Stream Cleanup** (`/api/bot/cleanup-streams`): Runs every 15 minutes
 - **Message Cleanup** (`/api/bot/cleanup-messages`): Runs daily at 2 AM
 
@@ -171,8 +170,8 @@ The following cron jobs are configured in `vercel.json`:
 Access system metrics at `/api/bot/monitoring` (requires `BOT_POLL_SECRET`):
 
 ```bash
-curl -X GET http://localhost:3000/api/bot/discover-streams \
-    -H "Authorization: Bearer vIlBRSo23NL5xdPMaMR+2eaH+YUrpLLN+TkUtBS20bE="
+curl -X GET http://localhost:3000/api/bot/monitoring \
+    -H "Authorization: Bearer YOUR_BOT_POLL_SECRET"
 ```
 
 ## Project Structure
