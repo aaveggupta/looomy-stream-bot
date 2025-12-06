@@ -16,6 +16,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/bot/cleanup-streams",
   "/api/bot/cleanup-messages",
   "/api/bot/poll-stream(.*)",
+  "/api/bot/process-message",
   "/api/bot/monitoring",
 ]);
 

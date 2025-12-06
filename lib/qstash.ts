@@ -58,4 +58,65 @@ export async function cancelPollJobs(sessionId: string): Promise<void> {
   logger.info({ sessionId }, "Poll jobs will be cancelled when session ends");
 }
 
+export interface MessageJobPayload {
+  sessionId: string;
+  messageId: string;
+  authorName: string;
+  messageText: string;
+  question: string;
+  embedding: number[];
+  botConfig: {
+    botName: string;
+    personality: string;
+    triggerPhrase: string;
+    messageRetentionDays: number;
+  };
+  userId: string;
+  platform: string;
+  externalChatId: string;
+}
+
+/**
+ * Publish individual message processing jobs to QStash for parallel processing
+ * @param messages Array of message job payloads
+ */
+export async function publishMessageJobs(
+  messages: MessageJobPayload[]
+): Promise<void> {
+  if (messages.length === 0) return;
+
+  const client = getQStashClient();
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const url = `${baseUrl}/api/bot/process-message`;
+
+  // Use QStash batch API for efficiency
+  const batchMessages = messages.map((msg) => ({
+    url, // QStash uses 'url' not 'destination'
+    body: msg, // batchJSON auto-serializes the body
+    headers: {
+      Authorization: `Bearer ${process.env.BOT_POLL_SECRET}`,
+      "Content-Type": "application/json",
+    },
+  }));
+
+  try {
+    await client.batchJSON(batchMessages);
+    logger.info(
+      { count: messages.length },
+      "Published message processing jobs to QStash"
+    );
+  } catch (error) {
+    // Log without embeddings to avoid huge log messages
+    const messagesWithoutEmbeddings = messages.map(({ embedding, ...rest }) => ({
+      ...rest,
+      embeddingLength: embedding?.length,
+    }));
+    logger.error(
+      { error, count: messages.length, messages: messagesWithoutEmbeddings },
+      "Failed to publish message jobs"
+    );
+    throw error;
+  }
+}
+
 

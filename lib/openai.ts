@@ -41,12 +41,18 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 }
 
 export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
+  if (texts.length === 0) return [];
+
   const openai = getOpenAI();
   const response = await openai.embeddings.create({
     model: "text-embedding-3-small",
     input: texts,
   });
-  return response.data.map((d) => d.embedding);
+
+  // OpenAI returns embeddings in the same order as inputs
+  // but sorted by index, so we need to sort by index to maintain order
+  const sorted = [...response.data].sort((a, b) => a.index - b.index);
+  return sorted.map((d) => d.embedding);
 }
 
 export async function generateChatResponse(
